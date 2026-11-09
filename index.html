@@ -1,0 +1,3522 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CYBER_KEY // Cyberpunk License Key Manager & REST API</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Font Awesome 6 Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+  
+  <!-- Google Fonts: Orbitron, Rajdhani, Share Tech Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Rajdhani:wght@500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  
+  <!-- Firebase Compat SDKs (v9.23.0 compat) -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            cyber: {
+              red: '#ff003c',
+              'red-glow': '#ff1a53',
+              'red-dark': '#80001f',
+              'red-darker': '#2e020b',
+              black: '#07070a',
+              card: '#0e0508',
+              surface: '#15080c',
+              border: '#ff003c40',
+              cyan: '#00f0ff',
+              neon: '#ff0055',
+              amber: '#ffb703',
+              green: '#00ff88'
+            }
+          },
+          fontFamily: {
+            orbitron: ['Orbitron', 'sans-serif'],
+            rajdhani: ['Rajdhani', 'sans-serif'],
+            mono: ['Share Tech Mono', 'monospace']
+          },
+          boxShadow: {
+            'neon-red': '0 0 15px rgba(255, 0, 60, 0.4), 0 0 30px rgba(255, 0, 60, 0.2)',
+            'neon-red-lg': '0 0 25px rgba(255, 0, 60, 0.6), 0 0 50px rgba(255, 0, 60, 0.3)',
+            'neon-red-sm': '0 0 8px rgba(255, 0, 60, 0.5)',
+            'neon-green': '0 0 12px rgba(0, 255, 136, 0.4)',
+            'glass': '0 8px 32px 0 rgba(0, 0, 0, 0.7)'
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* Custom Cyberpunk aesthetic styles */
+    :root {
+      --cyber-red: #ff003c;
+      --cyber-glow: rgba(255, 0, 60, 0.45);
+    }
+    
+    body {
+      background-color: #060609;
+      background-image: 
+        radial-gradient(circle at 50% 10%, rgba(255, 0, 60, 0.12) 0%, transparent 45%),
+        linear-gradient(rgba(255, 0, 60, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 0, 60, 0.03) 1px, transparent 1px);
+      background-size: 100% 100%, 36px 36px, 36px 36px;
+      color: #e5e5eb;
+      font-family: 'Rajdhani', sans-serif;
+    }
+
+    /* Scanlines effect */
+    .scanlines-overlay {
+      position: fixed;
+      top: 0; left: 0; width: 100vw; height: 100vh;
+      pointer-events: none;
+      z-index: 999;
+      background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.3) 50%), linear-gradient(90deg, rgba(255, 0, 60, 0.015), rgba(0, 255, 255, 0.015));
+      background-size: 100% 3px, 6px 100%;
+      opacity: 0.85;
+    }
+
+    /* Cyber border notch */
+    .cyber-cut {
+      clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 14px 100%, 0 calc(100% - 14px));
+    }
+    
+    .cyber-cut-sm {
+      clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px));
+    }
+
+    .cyber-glow-text {
+      text-shadow: 0 0 10px rgba(255, 0, 60, 0.7), 0 0 20px rgba(255, 0, 60, 0.3);
+    }
+    
+    .cyber-glow-green {
+      text-shadow: 0 0 10px rgba(0, 255, 136, 0.7), 0 0 20px rgba(0, 255, 136, 0.3);
+    }
+
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #090306;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #ff003c;
+      border-radius: 2px;
+      box-shadow: 0 0 6px #ff003c;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #ff3366;
+    }
+
+    /* Cyber Glitch Animation */
+    @keyframes glitch-skew {
+      0% { transform: skew(0deg); }
+      15% { transform: skew(2deg); }
+      20% { transform: skew(-3deg); }
+      25% { transform: skew(0deg); }
+      60% { transform: skew(1deg); }
+      75% { transform: skew(-2deg); }
+      80% { transform: skew(0deg); }
+      100% { transform: skew(0deg); }
+    }
+    .glitch-hover:hover {
+      animation: glitch-skew 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+    }
+
+    /* Pulse animation */
+    @keyframes pulse-ring {
+      0% { transform: scale(0.9); opacity: 0.8; }
+      50% { transform: scale(1.3); opacity: 0.1; }
+      100% { transform: scale(0.9); opacity: 0.8; }
+    }
+    .pulse-ring-anim {
+      animation: pulse-ring 2s infinite;
+    }
+  </style>
+</head>
+<body class="min-h-screen text-gray-200 antialiased overflow-x-hidden selection:bg-[#ff003c] selection:text-white">
+
+  <!-- Scanlines visual overlay -->
+  <div id="scanlines-layer" class="scanlines-overlay"></div>
+
+  <!-- ========================================== -->
+  <!-- LIQUID CHROME DYNAMIC WEBGL2 BACKGROUND    -->
+  <!-- ========================================== -->
+  <div id="liquid-chrome-container" class="fixed inset-0 z-0 pointer-events-none overflow-hidden transition-opacity duration-700 opacity-90">
+    <canvas id="liquid-chrome-canvas" class="w-full h-full block"></canvas>
+  </div>
+
+
+  <!-- Audio SFX Elements handled dynamically via Web Audio API -->
+
+  <!-- ========================================== -->
+  <!-- 1. LOGIN & ACCESS CONTROL LOCK SCREEN       -->
+  <!-- ========================================== -->
+  <div id="lockscreen" class="fixed inset-0 z-[1000] flex items-center justify-center bg-[#07070a]/95 backdrop-blur-xl transition-all duration-700">
+    <div class="relative w-full max-w-md p-8 m-4 rounded-xl border border-cyber-red/50 bg-[#0e0407]/90 shadow-neon-red-lg cyber-cut">
+      
+      <!-- Top Decorative HUD Corner -->
+      <div class="absolute -top-[1px] -left-[1px] w-6 h-6 border-t-2 border-l-2 border-cyber-red"></div>
+      <div class="absolute -top-[1px] -right-[1px] w-6 h-6 border-t-2 border-r-2 border-cyber-red"></div>
+      <div class="absolute -bottom-[1px] -left-[1px] w-6 h-6 border-b-2 border-l-2 border-cyber-red"></div>
+      <div class="absolute -bottom-[1px] -right-[1px] w-6 h-6 border-b-2 border-r-2 border-cyber-red"></div>
+
+      <!-- Header Icon & Security Badge -->
+      <div class="text-center mb-6">
+        <div class="inline-flex items-center justify-center w-20 h-20 rounded-full border border-cyber-red/60 bg-cyber-red/10 mb-4 shadow-neon-red">
+          <i class="fa-solid fa-shield-halved text-4xl text-cyber-red animate-pulse"></i>
+        </div>
+        <div class="font-mono text-xs uppercase tracking-widest text-cyber-red/80 mb-1 flex items-center justify-center gap-2">
+          <span class="inline-block w-2 h-2 rounded-full bg-cyber-red animate-ping"></span>
+          SECURITY PROTOCOL // LEVEL 05
+        </div>
+        <h1 class="font-orbitron text-2xl font-black text-white tracking-wider cyber-glow-text">CYBER_KEY // ACCESS</h1>
+        <p class="text-xs text-gray-400 font-mono mt-1">RESTRICTED LICENSING TERMINAL & DEPLOYMENT NODE</p>
+      </div>
+
+      <!-- Access Form -->
+      <form id="login-form" onsubmit="handleAuth(event)" class="space-y-4">
+        <div>
+          <label class="block font-mono text-xs text-gray-300 uppercase tracking-wider mb-2 flex items-center justify-between">
+            <span><span>//</span> SECURITY CLEARANCE PHRASE</span>
+            <span class="text-cyber-red/70 lowercase">[default: DevReal]</span>
+          </label>
+          <div class="relative">
+            <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 text-cyber-red/80">
+              <i class="fa-solid fa-terminal text-sm"></i>
+            </span>
+            <input 
+              type="password" 
+              id="auth-password" 
+              placeholder="ENTER PASSCODE..." 
+              required
+              autocomplete="current-password"
+              class="w-full bg-[#15060b] border border-cyber-red/40 rounded-lg pl-10 pr-10 py-3 text-sm text-white font-mono placeholder-gray-600 focus:outline-none focus:border-cyber-red focus:ring-1 focus:ring-cyber-red shadow-inner transition-all tracking-wider"
+            >
+            <button 
+              type="button" 
+              onclick="togglePassVisibility('auth-password', this)" 
+              class="absolute inset-y-0 right-0 flex items-center pr-3.5 text-gray-500 hover:text-cyber-red transition-colors"
+            >
+              <i class="fa-regular fa-eye text-sm"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Status & Feedback Alert -->
+        <div id="auth-alert" class="hidden p-3 rounded font-mono text-xs border text-center transition-all"></div>
+
+        <button 
+          type="submit" 
+          id="auth-submit-btn" 
+          class="w-full py-3.5 px-4 bg-gradient-to-r from-cyber-red to-[#b3002b] hover:from-[#ff1a53] hover:to-cyber-red text-white font-orbitron font-bold tracking-widest text-sm uppercase rounded shadow-neon-red hover:shadow-neon-red-lg transition-all transform active:scale-95 flex items-center justify-center gap-2 cyber-cut-sm"
+        >
+          <i class="fa-solid fa-lock-open text-xs"></i>
+          <span>AUTHENTICATE NODE</span>
+        </button>
+      </form>
+
+      <!-- System Diagnostic Footer -->
+      <div class="mt-6 pt-4 border-t border-cyber-red/20 flex items-center justify-between font-mono text-[11px] text-gray-500">
+        <span>STATUS: STANDBY</span>
+        <span class="text-cyber-red flex items-center gap-1.5">
+          <i class="fa-solid fa-fingerprint"></i> SECURE RESTRICTED
+        </span>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ========================================== -->
+  <!-- MAIN APPLICATION SHELL                     -->
+  <!-- ========================================== -->
+  <div id="app-shell" class="relative z-10 min-h-screen flex flex-col">
+    
+    <!-- Top System Banner & HUD Navbar -->
+    <header class="sticky top-0 z-50 bg-[#090306]/90 backdrop-blur-md border-b border-cyber-red/30">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex items-center justify-between h-16">
+          
+          <!-- Logo & Brand -->
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded border border-cyber-red flex items-center justify-center bg-cyber-red/10 shadow-neon-red">
+              <i class="fa-solid fa-key text-cyber-red text-lg"></i>
+            </div>
+            <div>
+              <div class="flex items-center gap-2">
+                <span class="font-orbitron font-black text-xl tracking-wider text-white cyber-glow-text">CYBER<span class="text-cyber-red">_KEY</span></span>
+                <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-cyber-red/20 text-cyber-red border border-cyber-red/40 font-bold uppercase">v2.5_PRO</span>
+              </div>
+              <p class="text-[11px] font-mono text-gray-400">MIL-SPEC HARDWARE-LOCKED LICENSE CORE</p>
+            </div>
+          </div>
+
+          <!-- Navigation Tabs -->
+          <nav class="hidden md:flex items-center space-x-1 font-orbitron text-xs">
+            <button onclick="switchTab('dashboard')" id="nav-dashboard" class="nav-btn px-4 py-2 rounded text-cyber-red bg-cyber-red/10 border border-cyber-red/50 transition-all flex items-center gap-2">
+              <i class="fa-solid fa-chart-line"></i> DASHBOARD
+            </button>
+            <button onclick="switchTab('generator')" id="nav-generator" class="nav-btn px-4 py-2 rounded text-gray-400 hover:text-white hover:bg-white/5 border border-transparent hover:border-white/10 transition-all flex items-center gap-2">
+              <i class="fa-solid fa-microchip"></i> GENERATOR
+            </button>
+            <button onclick="switchTab('keys')" id="nav-keys" class="nav-btn px-4 py-2 rounded text-gray-400 hover:text-white hover:bg-white/5 border border-transparent hover:border-white/10 transition-all flex items-center gap-2">
+              <i class="fa-solid fa-database"></i> KEY VAULT
+            </button>
+            <button onclick="switchTab('apps')" id="nav-apps" class="nav-btn px-4 py-2 rounded text-gray-400 hover:text-white hover:bg-white/5 border border-transparent hover:border-white/10 transition-all flex items-center gap-2">
+              <i class="fa-solid fa-server"></i> APPS REGISTRY
+            </button>
+            <button onclick="switchTab('docs')" id="nav-docs" class="nav-btn px-4 py-2 rounded text-gray-400 hover:text-white hover:bg-white/5 border border-transparent hover:border-white/10 transition-all flex items-center gap-2">
+              <i class="fa-solid fa-code"></i> API & SDK
+            </button>
+          </nav>
+
+          <!-- Top Right Controls: Firebase Status, Sound, Config, Lock -->
+          <div class="flex items-center gap-2.5">
+            <!-- Firebase Connection Badge -->
+            <button onclick="openConfigModal()" title="Firebase Connection Status" class="flex items-center gap-2 px-3 py-1.5 rounded-full border border-cyber-red/40 bg-[#16060c] font-mono text-xs text-gray-300 hover:border-cyber-red transition-all cursor-pointer">
+              <span id="firebase-dot" class="w-2.5 h-2.5 rounded-full bg-yellow-500 animate-pulse"></span>
+              <span id="firebase-label" class="hidden sm:inline">CONNECTING...</span>
+              <i class="fa-solid fa-gear text-xs text-cyber-red"></i>
+            </button>
+
+            <!-- Liquid Chrome Preset Selector -->
+            <button onclick="cycleLiquidChromeColor()" id="chrome-theme-btn" title="Cycle Liquid Chrome Fluid Hue (React Bits WebGL2)" class="px-2.5 py-1.5 rounded border border-cyber-red/40 bg-[#16060c] text-cyber-red hover:border-cyber-red hover:shadow-neon-red-sm transition-all flex items-center gap-1.5 font-mono text-xs">
+              <i class="fa-solid fa-droplet text-xs text-cyber-red"></i>
+              <span id="chrome-theme-label" class="hidden lg:inline text-[10px] font-bold tracking-wider">CHROME: BLOOD</span>
+            </button>
+
+            <!-- SFX Toggle -->
+            <button onclick="toggleAudio()" id="audio-toggle-btn" title="Toggle Cyber Audio FX" class="w-9 h-9 rounded border border-cyber-red/30 bg-[#16060c] text-gray-400 hover:text-cyber-red hover:border-cyber-red transition-all flex items-center justify-center text-sm">
+              <i id="audio-icon" class="fa-solid fa-volume-high text-cyber-red"></i>
+            </button>
+
+            <!-- Scanline Toggle -->
+            <button onclick="toggleScanlines()" title="Toggle Scanlines Effect" class="w-9 h-9 rounded border border-cyber-red/30 bg-[#16060c] text-gray-400 hover:text-cyber-red hover:border-cyber-red transition-all flex items-center justify-center text-sm">
+              <i class="fa-solid fa-tv text-xs"></i>
+            </button>
+
+            <!-- Relock Terminal -->
+            <button onclick="relockTerminal()" title="Lock Terminal" class="px-3 py-1.5 rounded bg-cyber-red/20 border border-cyber-red text-cyber-red hover:bg-cyber-red hover:text-white transition-all font-mono text-xs font-bold flex items-center gap-1.5">
+              <i class="fa-solid fa-lock text-xs"></i>
+              <span class="hidden md:inline">LOCK</span>
+            </button>
+          </div>
+
+        </div>
+      </div>
+      
+      <!-- Mobile Sub-navigation -->
+      <div class="md:hidden border-t border-cyber-red/20 px-4 py-2 flex items-center justify-between overflow-x-auto gap-2 font-orbitron text-xs">
+        <button onclick="switchTab('dashboard')" class="nav-btn-mobile px-2 py-1 text-cyber-red">Dash</button>
+        <button onclick="switchTab('generator')" class="nav-btn-mobile px-2 py-1 text-gray-400">Generate</button>
+        <button onclick="switchTab('keys')" class="nav-btn-mobile px-2 py-1 text-gray-400">Vault</button>
+        <button onclick="switchTab('apps')" class="nav-btn-mobile px-2 py-1 text-gray-400">Apps</button>
+        <button onclick="switchTab('docs')" class="nav-btn-mobile px-2 py-1 text-gray-400">API/Docs</button>
+      </div>
+    </header>
+
+    <!-- Global Connection / Simulation Banner -->
+    <div id="connection-banner" class="bg-gradient-to-r from-[#20050e] via-[#350817] to-[#20050e] border-b border-cyber-red/40 px-4 py-2 font-mono text-xs flex flex-wrap items-center justify-between text-gray-300 gap-2">
+      <div class="flex items-center gap-2">
+        <span class="text-cyber-red"><i class="fa-solid fa-satellite-dish animate-pulse"></i></span>
+        <span id="banner-text">FIREBASE REALTIME DB: Standby. Listening on <code class="text-cyber-red px-1 bg-black/40 rounded font-bold" id="banner-db-host">Default / Embedded Client</code></span>
+      </div>
+      <div class="flex items-center gap-4 text-[11px]">
+        <span class="text-gray-400">SYNC INTERVAL: <span class="text-green-400">LIVE WEBSOCKET</span></span>
+        <button onclick="openConfigModal()" class="text-cyber-red hover:underline uppercase font-bold tracking-wider">
+          <i class="fa-solid fa-sliders"></i> Adjust Firebase Config
+        </button>
+      </div>
+    </div>
+
+    <!-- MAIN CONTENT AREA CONTAINER -->
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+
+      <!-- ========================================== -->
+      <!-- TAB 1: OVERVIEW DASHBOARD                  -->
+      <!-- ========================================== -->
+      <section id="tab-dashboard" class="tab-content space-y-6">
+        
+        <!-- Metrics Stats HUD -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          
+          <!-- Card 1: Active Keys -->
+          <div class="relative p-5 rounded-lg border border-cyber-red/30 bg-[#0e0407]/80 backdrop-blur-md shadow-neon-red cyber-cut">
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="font-mono text-xs text-gray-400 tracking-wider uppercase">// TOTAL KEYS VAULTED</p>
+                <h3 id="stat-total-keys" class="font-orbitron text-3xl font-black text-white mt-1">0</h3>
+              </div>
+              <div class="w-12 h-12 rounded bg-cyber-red/10 border border-cyber-red/40 flex items-center justify-center text-cyber-red text-xl">
+                <i class="fa-solid fa-key"></i>
+              </div>
+            </div>
+            <div class="mt-4 pt-3 border-t border-cyber-red/10 flex items-center justify-between font-mono text-[11px]">
+              <span class="text-gray-400">ACTIVE: <strong id="stat-active-keys" class="text-cyber-green">0</strong></span>
+              <span class="text-gray-400">REVOKED: <strong id="stat-revoked-keys" class="text-cyber-red">0</strong></span>
+            </div>
+          </div>
+
+          <!-- Card 2: Active Apps -->
+          <div class="relative p-5 rounded-lg border border-cyber-red/30 bg-[#0e0407]/80 backdrop-blur-md shadow-neon-red cyber-cut">
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="font-mono text-xs text-gray-400 tracking-wider uppercase">// CONNECTED CLIENT APPS</p>
+                <h3 id="stat-online-apps" class="font-orbitron text-3xl font-black text-cyber-green mt-1">0</h3>
+              </div>
+              <div class="w-12 h-12 rounded bg-green-500/10 border border-green-500/40 flex items-center justify-center text-cyber-green text-xl">
+                <i class="fa-solid fa-satellite"></i>
+              </div>
+            </div>
+            <div class="mt-4 pt-3 border-t border-cyber-red/10 flex items-center justify-between font-mono text-[11px]">
+              <span class="text-gray-400">ONLINE STATUS: <strong id="stat-online-badge" class="text-cyber-green">ONLINE</strong></span>
+              <span class="text-gray-400">TOTAL APPS: <strong id="stat-total-apps" class="text-white">0</strong></span>
+            </div>
+          </div>
+
+          <!-- Card 3: HWID Locked -->
+          <div class="relative p-5 rounded-lg border border-cyber-red/30 bg-[#0e0407]/80 backdrop-blur-md shadow-neon-red cyber-cut">
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="font-mono text-xs text-gray-400 tracking-wider uppercase">// HWID BOUND KEYS</p>
+                <h3 id="stat-bound-keys" class="font-orbitron text-3xl font-black text-cyan-400 mt-1">0</h3>
+              </div>
+              <div class="w-12 h-12 rounded bg-cyan-500/10 border border-cyan-500/40 flex items-center justify-center text-cyan-400 text-xl">
+                <i class="fa-solid fa-fingerprint"></i>
+              </div>
+            </div>
+            <div class="mt-4 pt-3 border-t border-cyber-red/10 flex items-center justify-between font-mono text-[11px]">
+              <span class="text-gray-400">PROTECTION: <strong class="text-cyan-400">HARDWARE LOCKED</strong></span>
+              <span class="text-gray-400">FREE: <strong id="stat-unbound-keys" class="text-white">0</strong></span>
+            </div>
+          </div>
+
+          <!-- Card 4: Total Validations -->
+          <div class="relative p-5 rounded-lg border border-cyber-red/30 bg-[#0e0407]/80 backdrop-blur-md shadow-neon-red cyber-cut">
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="font-mono text-xs text-gray-400 tracking-wider uppercase">// AUTH VERIFICATIONS</p>
+                <h3 id="stat-total-logs" class="font-orbitron text-3xl font-black text-cyber-amber mt-1">0</h3>
+              </div>
+              <div class="w-12 h-12 rounded bg-amber-500/10 border border-amber-500/40 flex items-center justify-center text-cyber-amber text-xl">
+                <i class="fa-solid fa-bolt"></i>
+              </div>
+            </div>
+            <div class="mt-4 pt-3 border-t border-cyber-red/10 flex items-center justify-between font-mono text-[11px]">
+              <span class="text-gray-400">SECURITY FIREWALL: <strong class="text-green-400">NOMINAL</strong></span>
+              <span class="text-gray-400">LATENCY: <strong id="ping-latency" class="text-green-400">&lt; 35ms</strong></span>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Quick Generator & Dynamic App Quick View Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          
+          <!-- Left: Quick Action Panel -->
+          <div class="p-6 rounded-lg border border-cyber-red/30 bg-[#0d0307]/85 backdrop-blur-md shadow-glass space-y-4">
+            <div class="flex items-center justify-between pb-3 border-b border-cyber-red/20">
+              <h2 class="font-orbitron text-base font-bold text-white flex items-center gap-2">
+                <i class="fa-solid fa-bolt text-cyber-red"></i> QUICK KEY DISPATCH
+              </h2>
+              <span class="font-mono text-xs text-cyber-red uppercase">EXPRESS</span>
+            </div>
+
+            <div class="space-y-3 font-mono text-xs">
+              <div>
+                <label class="block text-gray-400 mb-1">// TARGET CLIENT APPLICATION</label>
+                <select id="quick-target-app" class="w-full bg-[#16060c] border border-cyber-red/30 rounded px-3 py-2 text-white focus:outline-none focus:border-cyber-red">
+                  <!-- Populated dynamically -->
+                </select>
+              </div>
+
+              <div class="grid grid-cols-2 gap-3">
+                <div>
+                  <label class="block text-gray-400 mb-1">// PREFIX</label>
+                  <input type="text" id="quick-prefix" value="REAL" class="w-full bg-[#16060c] border border-cyber-red/30 rounded px-3 py-2 text-white uppercase focus:outline-none focus:border-cyber-red">
+                </div>
+                <div>
+                  <label class="block text-gray-400 mb-1">// DURATION</label>
+                  <select id="quick-days" class="w-full bg-[#16060c] border border-cyber-red/30 rounded px-3 py-2 text-white focus:outline-none focus:border-cyber-red">
+                    <option value="30">30 DAYS</option>
+                    <option value="7">7 DAYS</option>
+                    <option value="1">1 DAY (TRIAL)</option>
+                    <option value="365">365 DAYS</option>
+                    <option value="unlimited">UNLIMITED / LIFETIME</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label class="block text-gray-400 mb-1">// CUSTOMER / MEMO</label>
+                <input type="text" id="quick-note" placeholder="e.g. VIP User Discord #441" class="w-full bg-[#16060c] border border-cyber-red/30 rounded px-3 py-2 text-white focus:outline-none focus:border-cyber-red">
+              </div>
+
+              <button onclick="handleQuickGenerate()" class="w-full mt-2 py-3 bg-cyber-red hover:bg-[#ff1a53] text-white font-orbitron font-bold text-xs uppercase tracking-wider rounded shadow-neon-red flex items-center justify-center gap-2 transition-all cyber-cut-sm">
+                <i class="fa-solid fa-wand-magic-sparkles"></i>
+                <span>DEPLOY INSTANT KEY</span>
+              </button>
+            </div>
+
+            <div id="quick-result-box" class="hidden mt-3 p-3 rounded bg-black/60 border border-cyber-red/40 font-mono text-xs">
+              <div class="text-gray-400 text-[10px]">// GENERATED &amp; SYNCED KEY:</div>
+              <div class="flex items-center justify-between mt-1">
+                <span id="quick-result-key" class="text-cyber-green font-bold text-sm tracking-wider select-all"></span>
+                <button onclick="copyToClipboard(document.getElementById('quick-result-key').innerText)" class="px-2 py-1 bg-cyber-red/20 text-cyber-red hover:bg-cyber-red hover:text-white rounded text-[11px] transition-all">
+                  <i class="fa-solid fa-copy"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Middle & Right: Active App Heartbeat Radar -->
+          <div class="lg:col-span-2 p-6 rounded-lg border border-cyber-red/30 bg-[#0d0307]/85 backdrop-blur-md shadow-glass flex flex-col justify-between">
+            <div>
+              <div class="flex items-center justify-between pb-3 border-b border-cyber-red/20 mb-4">
+                <div class="flex items-center gap-2">
+                  <span class="inline-block w-2.5 h-2.5 rounded-full bg-cyber-green animate-ping"></span>
+                  <h2 class="font-orbitron text-base font-bold text-white">LIVE APP REGISTRY (AUTO-DETECTED HEARTBEATS)</h2>
+                </div>
+                <button onclick="switchTab('apps')" class="font-mono text-xs text-cyber-red hover:underline">
+                  VIEW FULL REGISTRY &rarr;
+                </button>
+              </div>
+              <p class="text-xs text-gray-400 font-mono mb-4">
+                Client applications dynamically appear here when sending heartbeat telemetry to Firebase path <code class="text-cyber-red">/apps/{appId}</code>. No static dummies.
+              </p>
+
+              <!-- Dynamic App Mini-Grid -->
+              <div id="dashboard-apps-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-56 overflow-y-auto pr-1">
+                <!-- Populated via Firebase listener -->
+                <div class="col-span-2 py-8 text-center text-gray-500 font-mono text-xs border border-dashed border-cyber-red/20 rounded">
+                  <i class="fa-solid fa-radar text-2xl mb-2 text-cyber-red/40 animate-spin"></i>
+                  <p>SCANNING FOR INCOMING SOFTWARE HEARTBEATS...</p>
+                  <button onclick="openSimulatePingModal()" class="mt-3 px-3 py-1.5 rounded bg-cyber-red/10 border border-cyber-red text-cyber-red text-xs hover:bg-cyber-red hover:text-white font-mono transition-all">
+                    + Simulate Heartbeat Ping (Test)
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Terminal Audit Log Ticker -->
+            <div class="mt-6 pt-4 border-t border-cyber-red/20 font-mono text-xs">
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-gray-400 text-[11px]">// REAL-TIME SECURITY TELEMETRY AUDIT</span>
+                <button onclick="clearActivityLogs()" class="text-[10px] text-gray-500 hover:text-cyber-red">CLEAR LOCAL STREAM</button>
+              </div>
+              <div id="telemetry-log-stream" class="h-28 overflow-y-auto bg-black/70 rounded p-2.5 border border-cyber-red/20 text-[11px] space-y-1.5 select-text">
+                <div class="text-gray-500">[SYSTEM] Node boot sequence initiated. Listening to Firebase Realtime Database.</div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+      </section>
+
+      <!-- ========================================== -->
+      <!-- TAB 2: ADVANCED KEY GENERATOR              -->
+      <!-- ========================================== -->
+      <section id="tab-generator" class="tab-content hidden space-y-6">
+        <div class="p-6 md:p-8 rounded-lg border border-cyber-red/40 bg-[#0d0307]/90 backdrop-blur-md shadow-neon-red cyber-cut">
+          
+          <div class="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-cyber-red/20">
+            <div>
+              <h2 class="font-orbitron text-xl font-bold text-white flex items-center gap-2">
+                <i class="fa-solid fa-microchip text-cyber-red"></i> CRYPTO KEY FORGE & CUSTOMIZER
+              </h2>
+              <p class="font-mono text-xs text-gray-400 mt-1">GENERATE MIL-SPEC SEGMENTED CRYPTOGRAPHIC LICENSE KEYS</p>
+            </div>
+            <div class="font-mono text-xs text-gray-400 flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full bg-cyber-green"></span>
+              <span>ENGINE: WEB CRYPTO API (CSPRNG)</span>
+            </div>
+          </div>
+
+          <form id="key-gen-form" onsubmit="handleBatchGenerate(event)" class="mt-6 space-y-6">
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+              
+              <!-- Column 1: Target App & Prefix -->
+              <div class="space-y-4">
+                <div>
+                  <label class="block font-mono text-xs text-gray-300 uppercase mb-1.5">
+                    1. TARGET CLIENT APPLICATION <span class="text-cyber-red">*</span>
+                  </label>
+                  <select id="gen-target-app" required class="w-full bg-[#16060c] border border-cyber-red/40 rounded px-3 py-2.5 text-white font-mono text-sm focus:outline-none focus:border-cyber-red">
+                    <!-- Populated dynamically from Firebase /apps -->
+                  </select>
+                  <p class="text-[10px] font-mono text-gray-500 mt-1">Keys will be uniquely validated against this app's registry ID.</p>
+                </div>
+
+                <div>
+                  <label class="block font-mono text-xs text-gray-300 uppercase mb-1.5">
+                    2. CUSTOM KEY PREFIX (OPTIONAL)
+                  </label>
+                  <div class="flex gap-2">
+                    <input type="text" id="gen-prefix" value="REAL" maxlength="8" placeholder="e.g. REAL, AIM" class="flex-grow bg-[#16060c] border border-cyber-red/40 rounded px-3 py-2 text-white font-mono text-sm uppercase focus:outline-none focus:border-cyber-red">
+                    <button type="button" onclick="setPresetPrefix('REAL')" class="px-2 py-1 bg-cyber-red/20 text-cyber-red text-xs font-mono rounded hover:bg-cyber-red hover:text-white">REAL</button>
+                    <button type="button" onclick="setPresetPrefix('AIM')" class="px-2 py-1 bg-cyber-red/20 text-cyber-red text-xs font-mono rounded hover:bg-cyber-red hover:text-white">AIM</button>
+                    <button type="button" onclick="setPresetPrefix('NL3D')" class="px-2 py-1 bg-cyber-red/20 text-cyber-red text-xs font-mono rounded hover:bg-cyber-red hover:text-white">NL3D</button>
+                  </div>
+                </div>
+
+                <div>
+                  <label class="block font-mono text-xs text-gray-300 uppercase mb-1.5">
+                    3. CUSTOMER / ORDER REFERENCE NOTE
+                  </label>
+                  <input type="text" id="gen-note" placeholder="e.g. VIP Patron #004 / Discord ID" class="w-full bg-[#16060c] border border-cyber-red/40 rounded px-3 py-2 text-white font-mono text-sm focus:outline-none focus:border-cyber-red">
+                </div>
+              </div>
+
+              <!-- Column 2: Key Structure & Character Sets -->
+              <div class="space-y-4">
+                <div>
+                  <label class="block font-mono text-xs text-gray-300 uppercase mb-1.5">
+                    4. KEY FORMAT STRUCTURE
+                  </label>
+                  <div class="grid grid-cols-2 gap-2">
+                    <div>
+                      <span class="text-[10px] font-mono text-gray-400">SEGMENTS</span>
+                      <select id="gen-segments" onchange="updateKeyPreview()" class="w-full bg-[#16060c] border border-cyber-red/40 rounded px-2.5 py-1.5 text-white font-mono text-xs">
+                        <option value="1">1 SEGMENT</option>
+                        <option value="2">2 SEGMENTS</option>
+                        <option value="3">3 SEGMENTS</option>
+                        <option value="4" selected>4 SEGMENTS</option>
+                        <option value="5">5 SEGMENTS</option>
+                      </select>
+                    </div>
+                    <div>
+                      <span class="text-[10px] font-mono text-gray-400">CHARS / SEGMENT</span>
+                      <select id="gen-seg-length" onchange="updateKeyPreview()" class="w-full bg-[#16060c] border border-cyber-red/40 rounded px-2.5 py-1.5 text-white font-mono text-xs">
+                        <option value="4" selected>4 CHARACTERS</option>
+                        <option value="5">5 CHARACTERS</option>
+                        <option value="6">6 CHARACTERS</option>
+                        <option value="8">8 CHARACTERS</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <span class="text-[10px] font-mono text-gray-400 uppercase">SEPARATOR CHARACTER</span>
+                  <div class="flex gap-2 mt-1">
+                    <label class="flex items-center gap-1.5 font-mono text-xs text-gray-300 cursor-pointer">
+                      <input type="radio" name="gen-separator" value="-" checked onchange="updateKeyPreview()" class="text-cyber-red focus:ring-0"> HYPHEN (-)
+                    </label>
+                    <label class="flex items-center gap-1.5 font-mono text-xs text-gray-300 cursor-pointer">
+                      <input type="radio" name="gen-separator" value="_" onchange="updateKeyPreview()" class="text-cyber-red focus:ring-0"> UNDERSCORE (_)
+                    </label>
+                    <label class="flex items-center gap-1.5 font-mono text-xs text-gray-300 cursor-pointer">
+                      <input type="radio" name="gen-separator" value="" onchange="updateKeyPreview()" class="text-cyber-red focus:ring-0"> NONE
+                    </label>
+                  </div>
+                </div>
+
+                <div>
+                  <label class="block font-mono text-xs text-gray-300 uppercase mb-1.5">
+                    5. CHARACTER SET MATRIX
+                  </label>
+                  <div class="grid grid-cols-2 gap-2 font-mono text-xs">
+                    <label class="flex items-center gap-2 p-2 rounded bg-black/40 border border-cyber-red/20 cursor-pointer hover:border-cyber-red/50">
+                      <input type="checkbox" id="charset-upper" checked onchange="updateKeyPreview()" class="accent-cyber-red">
+                      <span>UPPERCASE (A-Z)</span>
+                    </label>
+                    <label class="flex items-center gap-2 p-2 rounded bg-black/40 border border-cyber-red/20 cursor-pointer hover:border-cyber-red/50">
+                      <input type="checkbox" id="charset-numbers" checked onchange="updateKeyPreview()" class="accent-cyber-red">
+                      <span>NUMBERS (0-9)</span>
+                    </label>
+                    <label class="flex items-center gap-2 p-2 rounded bg-black/40 border border-cyber-red/20 cursor-pointer hover:border-cyber-red/50">
+                      <input type="checkbox" id="charset-lower" onchange="updateKeyPreview()" class="accent-cyber-red">
+                      <span>LOWERCASE (a-z)</span>
+                    </label>
+                    <label class="flex items-center gap-2 p-2 rounded bg-black/40 border border-cyber-red/20 cursor-pointer hover:border-cyber-red/50">
+                      <input type="checkbox" id="charset-symbols" onchange="updateKeyPreview()" class="accent-cyber-red">
+                      <span>SYMBOLS (!#$@)</span>
+                    </label>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Column 3: Rules & Limits -->
+              <div class="space-y-4">
+                <div>
+                  <label class="block font-mono text-xs text-gray-300 uppercase mb-1.5">
+                    6. EXPIRATION LIFESPAN
+                  </label>
+                  <select id="gen-lifespan" onchange="handleLifespanChange()" class="w-full bg-[#16060c] border border-cyber-red/40 rounded px-3 py-2 text-white font-mono text-sm focus:outline-none focus:border-cyber-red">
+                    <option value="30">30 DAYS (STANDARD)</option>
+                    <option value="1">1 DAY (TRIAL PASS)</option>
+                    <option value="7">7 DAYS (WEEK PASS)</option>
+                    <option value="90">90 DAYS (QUARTER)</option>
+                    <option value="365">365 DAYS (ANNUAL)</option>
+                    <option value="unlimited">UNLIMITED / LIFETIME</option>
+                    <option value="custom">CUSTOM DAYS &rarr;</option>
+                  </select>
+                  <div id="custom-days-wrapper" class="hidden mt-2">
+                    <input type="number" id="gen-custom-days" min="1" max="3650" placeholder="ENTER NUMBER OF DAYS..." class="w-full bg-[#16060c] border border-cyber-red/40 rounded px-3 py-1.5 text-white font-mono text-xs">
+                  </div>
+                </div>
+
+                <div>
+                  <label class="block font-mono text-xs text-gray-300 uppercase mb-1.5">
+                    7. MAX ACTIVATION USAGE LIMIT
+                  </label>
+                  <select id="gen-max-uses" class="w-full bg-[#16060c] border border-cyber-red/40 rounded px-3 py-2 text-white font-mono text-sm focus:outline-none focus:border-cyber-red">
+                    <option value="1" selected>1 ACTIVATION (SINGLE-USER HWID LOCK)</option>
+                    <option value="2">2 ACTIVATIONS (DUAL SEAT)</option>
+                    <option value="5">5 ACTIVATIONS (TEAM SEAT)</option>
+                    <option value="unlimited">UNLIMITED USAGES</option>
+                  </select>
+                </div>
+
+                <div class="p-3 rounded bg-black/50 border border-cyber-red/30 space-y-2">
+                  <div class="flex items-center justify-between">
+                    <label for="gen-hwid-lock" class="font-mono text-xs text-white uppercase flex items-center gap-1.5 cursor-pointer">
+                      <i class="fa-solid fa-fingerprint text-cyber-red"></i>
+                      <span>ENFORCE HWID LOCK</span>
+                    </label>
+                    <input type="checkbox" id="gen-hwid-lock" checked class="accent-cyber-red w-4 h-4 cursor-pointer">
+                  </div>
+                  <p class="text-[10px] font-mono text-gray-400">
+                    When enabled, the key permanently binds to the first machine's hardware ID that activates it.
+                  </p>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- Live Sample Preview & Batch Quantity Bar -->
+            <div class="mt-6 pt-6 border-t border-cyber-red/20 grid grid-cols-1 lg:grid-cols-2 gap-6 items-center">
+              
+              <!-- Sample Key Visual Preview -->
+              <div class="p-4 rounded bg-black/60 border border-cyber-red/30">
+                <div class="font-mono text-[10px] text-gray-500 uppercase">// LIVE FORMAT PATTERN PREVIEW:</div>
+                <div id="key-preview-text" class="font-mono text-base font-bold text-cyber-green tracking-wider mt-1 truncate">
+                  REAL-XXXX-XXXX-XXXX-XXXX
+                </div>
+              </div>
+
+              <!-- Batch Quantity & Trigger -->
+              <div class="flex flex-col sm:flex-row items-center gap-4">
+                <div class="w-full sm:w-48">
+                  <div class="flex justify-between font-mono text-xs text-gray-400 mb-1">
+                    <span>BATCH QUANTITY</span>
+                    <span id="batch-count-display" class="text-cyber-red font-bold">1 KEY</span>
+                  </div>
+                  <input type="range" id="gen-quantity" min="1" max="50" value="1" oninput="updateBatchDisplay(this.value)" class="w-full accent-cyber-red cursor-pointer">
+                </div>
+
+                <button type="submit" id="generate-submit-btn" class="w-full sm:flex-1 py-3.5 bg-gradient-to-r from-cyber-red to-[#990024] hover:from-[#ff1a53] hover:to-cyber-red text-white font-orbitron font-bold text-xs uppercase tracking-widest rounded shadow-neon-red hover:shadow-neon-red-lg transition-all flex items-center justify-center gap-2 cyber-cut-sm">
+                  <i class="fa-solid fa-microchip"></i>
+                  <span>ENGAGE KEY SYNTHESIS</span>
+                </button>
+              </div>
+
+            </div>
+
+            <!-- Progress Bar during generation -->
+            <div id="gen-progress-wrapper" class="hidden mt-4 space-y-2">
+              <div class="flex justify-between font-mono text-xs text-gray-400">
+                <span>// SYNTHESIZING TO FIREBASE REALTIME DB...</span>
+                <span id="gen-progress-text">0%</span>
+              </div>
+              <div class="w-full h-2 bg-black rounded-full overflow-hidden border border-cyber-red/30">
+                <div id="gen-progress-bar" class="h-full bg-cyber-red transition-all duration-200" style="width: 0%"></div>
+              </div>
+            </div>
+
+          </form>
+
+          <!-- Batch Output Modal / Results Box -->
+          <div id="batch-results-container" class="hidden mt-6 p-4 rounded bg-black/80 border border-cyber-red/40 space-y-3">
+            <div class="flex items-center justify-between">
+              <div class="font-mono text-xs text-cyber-green font-bold flex items-center gap-2">
+                <i class="fa-solid fa-circle-check"></i>
+                <span id="batch-results-title">KEYS SUCCESSFULLY FORGED &amp; COMMITTED</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <button onclick="copyGeneratedBatch()" class="px-3 py-1 bg-cyber-red/20 text-cyber-red hover:bg-cyber-red hover:text-white rounded text-xs font-mono transition-all">
+                  <i class="fa-solid fa-copy"></i> COPY ALL
+                </button>
+                <button onclick="downloadBatchTxt()" class="px-3 py-1 bg-white/10 text-white hover:bg-white/20 rounded text-xs font-mono transition-all">
+                  <i class="fa-solid fa-download"></i> .TXT
+                </button>
+              </div>
+            </div>
+            <textarea id="batch-keys-textarea" readonly rows="5" class="w-full bg-[#120409] border border-cyber-red/30 rounded p-3 font-mono text-xs text-cyber-green focus:outline-none select-all"></textarea>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- ========================================== -->
+      <!-- TAB 3: KEY VAULT (MASTER DATABASE)         -->
+      <!-- ========================================== -->
+      <section id="tab-keys" class="tab-content hidden space-y-6">
+        
+        <!-- Controls & Filters Bar -->
+        <div class="p-4 md:p-6 rounded-lg border border-cyber-red/30 bg-[#0d0307]/85 backdrop-blur-md shadow-glass space-y-4">
+          <div class="flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <h2 class="font-orbitron text-xl font-bold text-white flex items-center gap-2">
+                <i class="fa-solid fa-database text-cyber-red"></i> MASTER KEY VAULT
+              </h2>
+              <p class="font-mono text-xs text-gray-400">REALTIME QUERY &amp; LIFECYCLE MANAGEMENT</p>
+            </div>
+
+            <!-- Export Buttons -->
+            <div class="flex items-center gap-2">
+              <button onclick="exportKeys('txt')" class="px-3 py-1.5 rounded bg-[#16060c] border border-cyber-red/40 text-gray-300 hover:text-white hover:border-cyber-red font-mono text-xs flex items-center gap-1.5 transition-all">
+                <i class="fa-solid fa-file-lines text-cyber-red"></i> EXPORT .TXT
+              </button>
+              <button onclick="exportKeys('json')" class="px-3 py-1.5 rounded bg-[#16060c] border border-cyber-red/40 text-gray-300 hover:text-white hover:border-cyber-red font-mono text-xs flex items-center gap-1.5 transition-all">
+                <i class="fa-solid fa-code text-cyan-400"></i> EXPORT .JSON
+              </button>
+              <button onclick="switchTab('generator')" class="px-3 py-1.5 rounded bg-cyber-red hover:bg-[#ff1a53] text-white font-mono text-xs font-bold flex items-center gap-1.5 shadow-neon-red transition-all">
+                <i class="fa-solid fa-plus"></i> FORGE NEW
+              </button>
+            </div>
+          </div>
+
+          <!-- Search & Filter Controls -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 pt-3 border-t border-cyber-red/20 font-mono text-xs">
+            
+            <!-- Search Query -->
+            <div class="relative sm:col-span-2">
+              <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-cyber-red/70">
+                <i class="fa-solid fa-magnifying-glass"></i>
+              </span>
+              <input 
+                type="text" 
+                id="vault-search-input" 
+                oninput="filterKeysTable()" 
+                placeholder="SEARCH BY KEY, APP, HWID, OR NOTE..." 
+                class="w-full bg-[#16060c] border border-cyber-red/30 rounded pl-9 pr-3 py-2 text-white placeholder-gray-500 focus:outline-none focus:border-cyber-red text-xs"
+              >
+            </div>
+
+            <!-- Filter By App -->
+            <div>
+              <select id="vault-filter-app" onchange="filterKeysTable()" class="w-full bg-[#16060c] border border-cyber-red/30 rounded px-3 py-2 text-white focus:outline-none focus:border-cyber-red text-xs">
+                <option value="ALL">ALL APPLICATIONS</option>
+                <!-- Populated dynamically -->
+              </select>
+            </div>
+
+            <!-- Filter By Status -->
+            <div>
+              <select id="vault-filter-status" onchange="filterKeysTable()" class="w-full bg-[#16060c] border border-cyber-red/30 rounded px-3 py-2 text-white focus:outline-none focus:border-cyber-red text-xs">
+                <option value="ALL">ALL STATUSES</option>
+                <option value="ACTIVE">ACTIVE ONLY</option>
+                <option value="EXPIRED">EXPIRED ONLY</option>
+                <option value="REVOKED">REVOKED ONLY</option>
+              </select>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Master Keys Table -->
+        <div class="rounded-lg border border-cyber-red/30 bg-[#0d0307]/85 backdrop-blur-md overflow-hidden shadow-glass">
+          <div class="overflow-x-auto">
+            <table class="w-full text-left font-mono text-xs">
+              <thead class="bg-[#18060d] text-gray-400 uppercase text-[11px] border-b border-cyber-red/30 tracking-wider">
+                <tr>
+                  <th class="py-3 px-4">LICENSE KEY</th>
+                  <th class="py-3 px-4">APP TARGET</th>
+                  <th class="py-3 px-4">STATUS</th>
+                  <th class="py-3 px-4">USES</th>
+                  <th class="py-3 px-4">EXPIRATION</th>
+                  <th class="py-3 px-4">HWID LOCK</th>
+                  <th class="py-3 px-4">NOTE</th>
+                  <th class="py-3 px-4 text-right">ACTIONS</th>
+                </tr>
+              </thead>
+              <tbody id="keys-table-body" class="divide-y divide-cyber-red/10 text-gray-300">
+                <!-- Populated dynamically via Firebase listener -->
+                <tr>
+                  <td colspan="8" class="py-12 text-center text-gray-500">
+                    <i class="fa-solid fa-spinner fa-spin text-2xl text-cyber-red mb-2"></i>
+                    <p>SYNCHRONIZING WITH FIREBASE VAULT...</p>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          
+          <!-- Table Footer Pagination / Status -->
+          <div class="p-4 bg-[#14050a] border-t border-cyber-red/20 flex flex-wrap items-center justify-between font-mono text-xs text-gray-400 gap-2">
+            <div>
+              DISPLAYING <span id="vault-count-visible" class="text-white font-bold">0</span> OF <span id="vault-count-total" class="text-cyber-red font-bold">0</span> KEYS
+            </div>
+            <div class="flex items-center gap-2">
+              <button onclick="filterKeysTable()" class="px-2 py-1 text-gray-400 hover:text-white">
+                <i class="fa-solid fa-rotate text-xs"></i> REFRESH TABLE
+              </button>
+            </div>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- ========================================== -->
+      <!-- TAB 4: ACTIVE APPS REGISTRY               -->
+      <!-- ========================================== -->
+      <section id="tab-apps" class="tab-content hidden space-y-6">
+        
+        <div class="p-6 rounded-lg border border-cyber-red/30 bg-[#0d0307]/85 backdrop-blur-md shadow-glass">
+          <div class="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-cyber-red/20">
+            <div>
+              <h2 class="font-orbitron text-xl font-bold text-white flex items-center gap-2">
+                <i class="fa-solid fa-server text-cyber-red"></i> DYNAMIC CLIENT APP REGISTRY
+              </h2>
+              <p class="font-mono text-xs text-gray-400 mt-1">
+                ONLY CLIENTS SENDING ACTIVE PINGS TO FIREBASE <code class="text-cyber-red">/apps</code> ARE REGISTERED
+              </p>
+            </div>
+            <div class="flex items-center gap-2">
+              <button onclick="openSimulatePingModal()" class="px-3 py-1.5 rounded bg-cyber-red/20 border border-cyber-red text-cyber-red hover:bg-cyber-red hover:text-white font-mono text-xs transition-all flex items-center gap-1.5">
+                <i class="fa-solid fa-satellite-dish"></i> TEST HEARTBEAT PING
+              </button>
+            </div>
+          </div>
+
+          <!-- Apps Grid Container -->
+          <div id="apps-registry-grid" class="mt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <!-- Dynamic Apps populated here -->
+          </div>
+
+          <!-- Empty State Container -->
+          <div id="apps-empty-state" class="hidden text-center py-12 space-y-3 font-mono">
+            <div class="w-16 h-16 rounded-full bg-cyber-red/10 border border-cyber-red/40 flex items-center justify-center mx-auto text-cyber-red text-2xl">
+              <i class="fa-solid fa-radar animate-pulse"></i>
+            </div>
+            <h3 class="text-white font-bold text-base">NO ACTIVE APPLICATIONS DETECTED</h3>
+            <p class="text-gray-400 text-xs max-w-md mx-auto">
+              Your software has not broadcasted a heartbeat to Firebase yet. Run your C#, Python, or Batch client, or click the button below to test with a simulated client ping.
+            </p>
+            <button onclick="openSimulatePingModal()" class="px-4 py-2 bg-cyber-red hover:bg-[#ff1a53] text-white rounded font-mono text-xs transition-all">
+              + Simulate Client Heartbeat Now
+            </button>
+          </div>
+
+        </div>
+
+      </section>
+
+      <!-- ========================================== -->
+      <!-- TAB 5: INTEGRATION DOCS & CODE TOOLKIT     -->
+      <!-- ========================================== -->
+      <section id="tab-docs" class="tab-content hidden space-y-6">
+        
+        <!-- Header Info -->
+        <div class="p-6 rounded-lg border border-cyber-red/30 bg-[#0d0307]/85 backdrop-blur-md shadow-glass">
+          <h2 class="font-orbitron text-xl font-bold text-white flex items-center gap-2">
+            <i class="fa-solid fa-code text-cyber-red"></i> CLIENT INTEGRATION SDK &amp; DEPLOYMENT MANUAL
+          </h2>
+          <p class="font-mono text-xs text-gray-400 mt-1">
+            COPY-PASTE READY CLIENT VERIFICATION LIBRARIES WITH AUTOMATIC FIREBASE SYNC &amp; HWID LOCKING
+          </p>
+
+          <!-- Interactive Code Parameters Customizer -->
+          <div class="mt-4 p-4 rounded bg-black/60 border border-cyber-red/30 grid grid-cols-1 md:grid-cols-2 gap-4 font-mono text-xs">
+            <div>
+              <label class="block text-gray-400 mb-1">// ACTIVE APP TO INJECT IN CODE SNIPPETS:</label>
+              <select id="docs-code-app-select" onchange="renderCodeSnippets()" class="w-full bg-[#16060c] border border-cyber-red/40 rounded px-3 py-1.5 text-white">
+                <!-- Populated dynamically -->
+              </select>
+            </div>
+            <div>
+              <label class="block text-gray-400 mb-1">// FIREBASE DATABASE BASE URL:</label>
+              <input type="text" id="docs-code-dburl" readonly class="w-full bg-[#16060c] border border-cyber-red/40 rounded px-3 py-1.5 text-cyber-green select-all">
+            </div>
+          </div>
+        </div>
+
+        <!-- Language Tabs Container -->
+        <div class="rounded-lg border border-cyber-red/30 bg-[#0d0307]/85 backdrop-blur-md shadow-glass overflow-hidden">
+          
+          <!-- Code Language Switcher -->
+          <div class="flex items-center border-b border-cyber-red/30 bg-[#16050b] px-4 font-mono text-xs overflow-x-auto">
+            <button onclick="switchCodeLang('csharp')" id="code-btn-csharp" class="code-tab-btn py-3 px-4 border-b-2 border-cyber-red text-cyber-red font-bold flex items-center gap-2">
+              <i class="fa-brands fa-microsoft"></i> C# (.NET Core / Framework)
+            </button>
+            <button onclick="switchCodeLang('python')" id="code-btn-python" class="code-tab-btn py-3 px-4 border-b-2 border-transparent text-gray-400 hover:text-white flex items-center gap-2">
+              <i class="fa-brands fa-python"></i> Python (Requests)
+            </button>
+            <button onclick="switchCodeLang('batch')" id="code-btn-batch" class="code-tab-btn py-3 px-4 border-b-2 border-transparent text-gray-400 hover:text-white flex items-center gap-2">
+              <i class="fa-solid fa-terminal"></i> PowerShell / Batch
+            </button>
+            <button onclick="switchCodeLang('rest')" id="code-btn-rest" class="code-tab-btn py-3 px-4 border-b-2 border-transparent text-gray-400 hover:text-white flex items-center gap-2">
+              <i class="fa-solid fa-network-wired"></i> Raw REST API Specs
+            </button>
+            <button onclick="switchCodeLang('deploy')" id="code-btn-deploy" class="code-tab-btn py-3 px-4 border-b-2 border-transparent text-gray-400 hover:text-white flex items-center gap-2">
+              <i class="fa-solid fa-cloud-arrow-up"></i> Firebase + Vercel Setup
+            </button>
+          </div>
+
+          <!-- Snippet Body Container -->
+          <div class="p-6 relative">
+            
+            <!-- Copy Snippet Button -->
+            <button onclick="copyCurrentCodeSnippet()" class="absolute top-4 right-6 px-3 py-1.5 rounded bg-cyber-red/20 border border-cyber-red/50 text-cyber-red hover:bg-cyber-red hover:text-white font-mono text-xs flex items-center gap-1.5 transition-all z-10">
+              <i class="fa-regular fa-copy"></i>
+              <span id="copy-code-label">COPY CODE</span>
+            </button>
+
+            <!-- C# Code -->
+            <div id="code-pane-csharp" class="code-pane">
+              <pre class="bg-black/80 p-4 rounded border border-cyber-red/20 font-mono text-xs text-gray-200 overflow-x-auto"><code id="snippet-csharp"></code></pre>
+            </div>
+
+            <!-- Python Code -->
+            <div id="code-pane-python" class="code-pane hidden">
+              <pre class="bg-black/80 p-4 rounded border border-cyber-red/20 font-mono text-xs text-gray-200 overflow-x-auto"><code id="snippet-python"></code></pre>
+            </div>
+
+            <!-- PowerShell / Batch Code -->
+            <div id="code-pane-batch" class="code-pane hidden">
+              <pre class="bg-black/80 p-4 rounded border border-cyber-red/20 font-mono text-xs text-gray-200 overflow-x-auto"><code id="snippet-batch"></code></pre>
+            </div>
+
+            <!-- REST API Specs -->
+            <div id="code-pane-rest" class="code-pane hidden space-y-4 font-mono text-xs">
+              <div class="p-4 rounded bg-black/80 border border-cyber-red/20 space-y-2">
+                <div class="text-cyber-green font-bold">1. VERIFY KEY &amp; FETCH DATA</div>
+                <div class="text-gray-400"><strong class="text-white">GET</strong> <code id="rest-url-get" class="text-cyber-red">https://[DATABASE_NAME].firebaseio.com/keys/{LICENSE_KEY}.json</code></div>
+                <p class="text-gray-400">Returns JSON payload with expiration, targetApp, boundHwid, and status.</p>
+              </div>
+
+              <div class="p-4 rounded bg-black/80 border border-cyber-red/20 space-y-2">
+                <div class="text-cyber-amber font-bold">2. BIND HARDWARE ID (HWID) UPON FIRST ACTIVATION</div>
+                <div class="text-gray-400"><strong class="text-white">PATCH</strong> <code id="rest-url-patch" class="text-cyber-red">https://[DATABASE_NAME].firebaseio.com/keys/{LICENSE_KEY}.json</code></div>
+                <pre class="bg-black p-2 rounded text-cyan-400">{ "boundHwid": "USER_HWID_HASH", "currentUses": 1, "lastActivated": 1699999999 }</pre>
+              </div>
+
+              <div class="p-4 rounded bg-black/80 border border-cyber-red/20 space-y-2">
+                <div class="text-cyan-400 font-bold">3. BROADCAST ACTIVE APP HEARTBEAT</div>
+                <div class="text-gray-400"><strong class="text-white">PUT</strong> <code id="rest-url-app" class="text-cyber-red">https://[DATABASE_NAME].firebaseio.com/apps/{APP_ID}.json</code></div>
+                <pre class="bg-black p-2 rounded text-cyan-400">{ "appName": "RealAIM_Pro", "version": "v2.5.0", "lastSeen": 1700000000, "status": "ONLINE" }</pre>
+              </div>
+            </div>
+
+            <!-- Firebase & Vercel Deployment Guide -->
+            <div id="code-pane-deploy" class="code-pane hidden space-y-6 font-mono text-xs">
+              <div class="p-4 rounded bg-black/80 border border-cyber-red/30 space-y-3">
+                <h3 class="font-orbitron text-sm font-bold text-white text-cyber-glow-text">STEP 1: FIREBASE REALTIME DATABASE CONFIGURATION</h3>
+                <ol class="list-decimal list-inside space-y-1.5 text-gray-300">
+                  <li>Navigate to <a href="https://console.firebase.google.com" target="_blank" class="text-cyber-red underline">Firebase Console</a> and click <strong>Create a project</strong>.</li>
+                  <li>In the sidebar, navigate to <strong>Build &rarr; Realtime Database</strong> &rarr; Click <strong>Create Database</strong> (Select US-Central or nearest region).</li>
+                  <li>Under <strong>Rules</strong> tab, set read/write permissions for license validation or restrict as preferred:</li>
+                </ol>
+                <pre class="bg-black p-3 rounded border border-cyber-red/20 text-cyber-green">{
+  "rules": {
+    "keys": {
+      ".read": true,
+      ".write": true
+    },
+    "apps": {
+      ".read": true,
+      ".write": true
+    },
+    "logs": {
+      ".read": true,
+      ".write": true
+    }
+  }
+}</pre>
+                <p class="text-gray-400">Click <strong>Publish</strong>. Copy your Web App config credentials into the app settings cog.</p>
+              </div>
+
+              <div class="p-4 rounded bg-black/80 border border-cyber-red/30 space-y-3">
+                <h3 class="font-orbitron text-sm font-bold text-white text-cyber-glow-text">STEP 2: GITHUB REPO INITIALIZATION &amp; PUSH</h3>
+                <p class="text-gray-300">Push this single-file web application to your GitHub repository:</p>
+                <pre class="bg-black p-3 rounded border border-cyber-red/20 text-gray-200"># In your project folder:
+git init
+git add index.html
+git commit -m "feat: Mil-spec Cyberpunk Key Manager & Firebase API"
+git branch -M main
+git remote add origin https://github.com/YOUR_USERNAME/cyberpunk-key-manager.git
+git push -u origin main</pre>
+              </div>
+
+              <div class="p-4 rounded bg-black/80 border border-cyber-red/30 space-y-3">
+                <h3 class="font-orbitron text-sm font-bold text-white text-cyber-glow-text">STEP 3: INSTANT VERCEL DEPLOYMENT</h3>
+                <ol class="list-decimal list-inside space-y-1.5 text-gray-300">
+                  <li>Open <a href="https://vercel.com" target="_blank" class="text-cyber-red underline">Vercel.com</a> and sign in with GitHub.</li>
+                  <li>Click <strong>Add New &rarr; Project</strong>, then select your <code class="text-cyber-red">cyberpunk-key-manager</code> repository.</li>
+                  <li>Leave build settings as default (Static HTML) and click <strong>Deploy</strong>.</li>
+                  <li>Your custom HTTPS dashboard is instantly globally live on Vercel Edge Network!</li>
+                </ol>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+      </section>
+
+    </main>
+
+    <!-- System Telemetry Footer Bar -->
+    <footer class="border-t border-cyber-red/20 bg-[#090306]/90 py-3 px-4 font-mono text-[11px] text-gray-500">
+      <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-2">
+        <div class="flex items-center gap-3">
+          <span class="flex items-center gap-1.5 text-cyber-red">
+            <i class="fa-solid fa-shield-halved"></i> DEVREAL PROTOCOL
+          </span>
+          <span>|</span>
+          <span id="system-clock">00:00:00 UTC</span>
+        </div>
+        <div class="flex items-center gap-3">
+          <span>ENCRYPTION: AES-256 / SHA-256</span>
+          <span>|</span>
+          <span class="text-gray-400">MILITARY-SPEC REVOCATION MATRIX</span>
+        </div>
+      </div>
+    </footer>
+
+  </div>
+
+
+  <!-- ========================================== -->
+  <!-- MODAL: FIREBASE CONFIGURATION EDITOR       -->
+  <!-- ========================================== -->
+  <div id="config-modal" class="hidden fixed inset-0 z-[1100] flex items-center justify-center bg-black/80 backdrop-blur-md p-4">
+    <div class="w-full max-w-xl p-6 rounded-lg border border-cyber-red/50 bg-[#0e0407] shadow-neon-red-lg cyber-cut space-y-4">
+      <div class="flex items-center justify-between pb-3 border-b border-cyber-red/30">
+        <h3 class="font-orbitron text-base font-bold text-white flex items-center gap-2">
+          <i class="fa-solid fa-satellite-dish text-cyber-red"></i> FIREBASE REALTIME DB CONFIGURATION
+        </h3>
+        <button onclick="closeConfigModal()" class="text-gray-400 hover:text-cyber-red text-lg">&times;</button>
+      </div>
+
+      <p class="font-mono text-xs text-gray-400">
+        Input your Firebase credentials below. Changes are securely saved to your browser session / local storage and immediately activate the real-time WebSocket database listeners.
+      </p>
+
+      <form onsubmit="saveFirebaseConfig(event)" class="space-y-3 font-mono text-xs">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-gray-400 mb-1">apiKey</label>
+            <input type="text" id="cfg-apiKey" placeholder="AIzaSy..." class="w-full bg-[#16060c] border border-cyber-red/30 rounded p-2 text-white">
+          </div>
+          <div>
+            <label class="block text-gray-400 mb-1">databaseURL <span class="text-cyber-red">*</span></label>
+            <input type="text" id="cfg-databaseURL" placeholder="https://your-app-rtdb.firebaseio.com" required class="w-full bg-[#16060c] border border-cyber-red/30 rounded p-2 text-white">
+          </div>
+          <div>
+            <label class="block text-gray-400 mb-1">projectId</label>
+            <input type="text" id="cfg-projectId" placeholder="your-project-id" class="w-full bg-[#16060c] border border-cyber-red/30 rounded p-2 text-white">
+          </div>
+          <div>
+            <label class="block text-gray-400 mb-1">authDomain</label>
+            <input type="text" id="cfg-authDomain" placeholder="your-project.firebaseapp.com" class="w-full bg-[#16060c] border border-cyber-red/30 rounded p-2 text-white">
+          </div>
+          <div>
+            <label class="block text-gray-400 mb-1">storageBucket</label>
+            <input type="text" id="cfg-storageBucket" placeholder="your-project.appspot.com" class="w-full bg-[#16060c] border border-cyber-red/30 rounded p-2 text-white">
+          </div>
+          <div>
+            <label class="block text-gray-400 mb-1">appId</label>
+            <input type="text" id="cfg-appId" placeholder="1:123456:web:abcd" class="w-full bg-[#16060c] border border-cyber-red/30 rounded p-2 text-white">
+          </div>
+        </div>
+
+        <div class="flex items-center justify-between pt-4 border-t border-cyber-red/20">
+          <button type="button" onclick="loadDefaultMockMode()" class="px-3 py-2 rounded bg-white/5 hover:bg-white/10 text-gray-300 font-mono text-xs">
+            Use Local Simulation Engine
+          </button>
+          <div class="flex gap-2">
+            <button type="button" onclick="closeConfigModal()" class="px-4 py-2 rounded bg-black border border-gray-600 text-gray-300 hover:text-white font-mono text-xs">
+              Cancel
+            </button>
+            <button type="submit" class="px-4 py-2 rounded bg-cyber-red hover:bg-[#ff1a53] text-white font-orbitron font-bold text-xs uppercase shadow-neon-red">
+              Save &amp; Connect
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+
+  <!-- ========================================== -->
+  <!-- MODAL: SIMULATE APP HEARTBEAT PING        -->
+  <!-- ========================================== -->
+  <div id="simulate-ping-modal" class="hidden fixed inset-0 z-[1100] flex items-center justify-center bg-black/80 backdrop-blur-md p-4">
+    <div class="w-full max-w-md p-6 rounded-lg border border-cyber-red/50 bg-[#0e0407] shadow-neon-red-lg cyber-cut space-y-4">
+      <div class="flex items-center justify-between pb-3 border-b border-cyber-red/30">
+        <h3 class="font-orbitron text-base font-bold text-white flex items-center gap-2">
+          <i class="fa-solid fa-satellite-dish text-cyber-red"></i> SIMULATE CLIENT HEARTBEAT
+        </h3>
+        <button onclick="closeSimulatePingModal()" class="text-gray-400 hover:text-cyber-red text-lg">&times;</button>
+      </div>
+
+      <p class="font-mono text-xs text-gray-400">
+        Trigger a live ping directly to Firebase <code class="text-cyber-red">/apps</code> to register software and verify dynamic detection.
+      </p>
+
+      <form onsubmit="handleSendHeartbeatPing(event)" class="space-y-3 font-mono text-xs">
+        <div>
+          <label class="block text-gray-400 mb-1">APP DISPLAY NAME</label>
+          <input type="text" id="sim-app-name" value="CyberStrike_V3" required class="w-full bg-[#16060c] border border-cyber-red/30 rounded p-2 text-white">
+        </div>
+        <div>
+          <label class="block text-gray-400 mb-1">APP ID (SLUG)</label>
+          <input type="text" id="sim-app-id" value="cyberstrike-v3" required class="w-full bg-[#16060c] border border-cyber-red/30 rounded p-2 text-white">
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block text-gray-400 mb-1">VERSION</label>
+            <input type="text" id="sim-app-ver" value="v3.1.0" class="w-full bg-[#16060c] border border-cyber-red/30 rounded p-2 text-white">
+          </div>
+          <div>
+            <label class="block text-gray-400 mb-1">STATUS</label>
+            <select id="sim-app-status" class="w-full bg-[#16060c] border border-cyber-red/30 rounded p-2 text-white">
+              <option value="ONLINE">ONLINE</option>
+              <option value="OFFLINE">OFFLINE</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="flex justify-end gap-2 pt-4 border-t border-cyber-red/20">
+          <button type="button" onclick="closeSimulatePingModal()" class="px-4 py-2 rounded bg-black border border-gray-600 text-gray-300 hover:text-white font-mono text-xs">
+            Cancel
+          </button>
+          <button type="submit" class="px-4 py-2 rounded bg-cyber-red hover:bg-[#ff1a53] text-white font-orbitron font-bold text-xs uppercase shadow-neon-red">
+            Broadcast Ping
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+
+  <!-- ========================================== -->
+  <!-- MODAL: EXTEND KEY LIFESPAN                 -->
+  <!-- ========================================== -->
+  <div id="extend-key-modal" class="hidden fixed inset-0 z-[1100] flex items-center justify-center bg-black/80 backdrop-blur-md p-4">
+    <div class="w-full max-w-sm p-6 rounded-lg border border-cyber-red/50 bg-[#0e0407] shadow-neon-red-lg cyber-cut space-y-4">
+      <div class="flex items-center justify-between pb-3 border-b border-cyber-red/30">
+        <h3 class="font-orbitron text-sm font-bold text-white flex items-center gap-2">
+          <i class="fa-solid fa-clock-rotate-left text-cyber-red"></i> EXTEND KEY LIFESPAN
+        </h3>
+        <button onclick="closeExtendModal()" class="text-gray-400 hover:text-cyber-red text-lg">&times;</button>
+      </div>
+
+      <div class="font-mono text-xs space-y-2">
+        <div class="text-gray-400">TARGET KEY:</div>
+        <div id="extend-modal-key" class="text-cyber-green font-bold text-sm tracking-wider"></div>
+        <div id="extend-modal-current" class="text-gray-500 text-[11px]"></div>
+      </div>
+
+      <div class="space-y-3 font-mono text-xs">
+        <label class="block text-gray-400">// EXTENSION DURATION</label>
+        <div class="grid grid-cols-2 gap-2">
+          <button onclick="applyKeyExtension(7)" class="p-2 rounded bg-cyber-red/20 border border-cyber-red/40 hover:bg-cyber-red hover:text-white text-white font-bold transition-all">+7 DAYS</button>
+          <button onclick="applyKeyExtension(30)" class="p-2 rounded bg-cyber-red/20 border border-cyber-red/40 hover:bg-cyber-red hover:text-white text-white font-bold transition-all">+30 DAYS</button>
+          <button onclick="applyKeyExtension(90)" class="p-2 rounded bg-cyber-red/20 border border-cyber-red/40 hover:bg-cyber-red hover:text-white text-white font-bold transition-all">+90 DAYS</button>
+          <button onclick="applyKeyExtension('unlimited')" class="p-2 rounded bg-cyber-red/20 border border-cyber-red/40 hover:bg-cyber-red hover:text-white text-white font-bold transition-all">LIFETIME</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ========================================== -->
+  <!-- TOAST NOTIFICATIONS CONTAINER              -->
+  <!-- ========================================== -->
+  <div id="toast-container" class="fixed bottom-6 right-6 z-[1200] space-y-2 pointer-events-none"></div>
+
+
+  <!-- ========================================== -->
+  <!-- APPLICATION SCRIPT LOGIC                   -->
+  <!-- ========================================== -->
+  <script>
+    /**
+     * CYBER_KEY MASTER ENGINE
+     * Complete single-file Cyberpunk License Key Manager & Firebase API
+     */
+
+    
+    // ========================================================
+    // REACT BITS LIQUID CHROME WEBGL2 ENGINE (VANILLA RUNTIME)
+    // ========================================================
+    const LC_PIXEL_BUDGET = 2.4e6;
+    const LC_SIM_CELL = 4;
+    const LC_SIM_STEP = 1 / 120;
+
+    const LC_VERTEX = `#version 300 es
+    const vec2 corners[3] = vec2[3](vec2(-1.0, -1.0), vec2(3.0, -1.0), vec2(-1.0, 3.0));
+    void main() {
+      gl_Position = vec4(corners[gl_VertexID], 0.0, 1.0);
+    }`;
+
+    const LC_SIM = `#version 300 es
+    precision highp float;
+    uniform sampler2D uState;
+    uniform vec2 uSize;
+    uniform vec4 uStroke;
+    uniform vec2 uImpulse;
+    out vec4 fragColor;
+
+    float segment(vec2 p, vec2 a, vec2 b) {
+      vec2 ab = b - a;
+      float t = clamp(dot(p - a, ab) / max(dot(ab, ab), 1e-4), 0.0, 1.0);
+      return length(p - a - ab * t);
+    }
+
+    void main() {
+      vec2 texel = 1.0 / uSize;
+      vec2 uv = gl_FragCoord.xy * texel;
+      vec2 state = texture(uState, uv).rg;
+      vec2 around =
+        texture(uState, uv - vec2(texel.x, 0.0)).rg +
+        texture(uState, uv + vec2(texel.x, 0.0)).rg +
+        texture(uState, uv - vec2(0.0, texel.y)).rg +
+        texture(uState, uv + vec2(0.0, texel.y)).rg -
+        4.0 * state;
+      float next = state.r + (state.r - state.g) * 0.982 + 0.3 * around.r + 0.08 * (around.r - around.g);
+      next *= 0.998;
+      if (uImpulse.x != 0.0) {
+        float d = segment(gl_FragCoord.xy, uStroke.xy, uStroke.zw) / uImpulse.y;
+        next += uImpulse.x * exp(-d * d);
+      }
+      fragColor = vec4(next, state.r, 0.0, 1.0);
+    }`;
+
+    const LC_SLOPE = `#version 300 es
+    precision highp float;
+    uniform sampler2D uState;
+    uniform vec2 uSize;
+    out vec4 fragColor;
+
+    void main() {
+      vec2 texel = 1.0 / uSize;
+      vec2 uv = gl_FragCoord.xy * texel;
+      float left = texture(uState, uv - vec2(texel.x, 0.0)).r;
+      float right = texture(uState, uv + vec2(texel.x, 0.0)).r;
+      float down = texture(uState, uv - vec2(0.0, texel.y)).r;
+      float up = texture(uState, uv + vec2(0.0, texel.y)).r;
+      fragColor = vec4((right - left) * 0.5, (up - down) * 0.5, 0.0, 1.0);
+    }`;
+
+    const LC_CHROME = `#version 300 es
+    precision highp float;
+    uniform vec2 uResolution;
+    uniform float uUnit;
+    uniform float uTime;
+    uniform float uAmplitude;
+    uniform vec2 uFrequency;
+    uniform float uDetail;
+    uniform float uSharpness;
+    uniform float uDepth;
+    uniform float uPresence;
+    uniform vec3 uTint;
+    uniform vec2 uShift;
+    uniform float uRoughness;
+    uniform float uExposure;
+    uniform float uLight;
+    uniform sampler2D uSlope;
+    uniform vec2 uSlopeSize;
+    uniform float uRipple;
+    out vec4 fragColor;
+
+    vec2 slopeAt(vec2 uv) {
+      vec2 st = uv * uSlopeSize - 0.5;
+      vec2 i = floor(st);
+      vec2 f = st - i;
+      vec2 f2 = f * f;
+      vec2 f3 = f2 * f;
+      vec2 w0 = (-f3 + 3.0 * f2 - 3.0 * f + 1.0) / 6.0;
+      vec2 w1 = (3.0 * f3 - 6.0 * f2 + 4.0) / 6.0;
+      vec2 w2 = (-3.0 * f3 + 3.0 * f2 + 3.0 * f + 1.0) / 6.0;
+      vec2 w3 = f3 / 6.0;
+      vec2 g0 = w0 + w1;
+      vec2 g1 = w2 + w3;
+      vec2 h0 = (i - 0.5 + w1 / g0) / uSlopeSize;
+      vec2 h1 = (i + 1.5 + w3 / g1) / uSlopeSize;
+      vec2 a = texture(uSlope, vec2(h0.x, h0.y)).rg;
+      vec2 b = texture(uSlope, vec2(h1.x, h0.y)).rg;
+      vec2 c = texture(uSlope, vec2(h0.x, h1.y)).rg;
+      vec2 d = texture(uSlope, vec2(h1.x, h1.y)).rg;
+      return g0.y * (g0.x * a + g1.x * b) + g1.y * (g0.x * c + g1.x * d);
+    }
+
+    float lamp(vec2 p, vec2 center, vec2 size, float soft) {
+      vec2 grown = size + soft;
+      vec2 q = (p - center) / grown;
+      q *= q;
+      float d = sqrt(sqrt(dot(q, q)));
+      float edge = soft / min(grown.x, grown.y);
+      float shape = (1.0 - smoothstep(1.0 - edge, 1.0 + edge, d)) * (1.0 - 0.45 * d * d);
+      return shape * size.x * size.y / (grown.x * grown.y);
+    }
+
+    vec3 studio(vec3 r, float blur) {
+      vec2 p = r.xy / max(r.z + 1.0, 0.05);
+      p += uShift * smoothstep(0.3, 1.0, length(p));
+      float radius = length(p);
+      float soft = 0.008 + blur;
+      vec2 dir = p / max(radius, 1e-3);
+      float key = lamp(p, vec2(-0.25, 0.42), vec2(0.3, 0.12), soft);
+      float side = lamp(p, vec2(0.48, 0.12), vec2(0.06, 0.3), soft);
+      float ground = lamp(p, vec2(-0.1, -0.55), vec2(0.45, 0.06), soft);
+      float rise = smoothstep(-1.0, 1.0, dir.y);
+      if (uLight > 0.5) {
+        float edge = 0.008 + blur * 0.8;
+        float lobe = smoothstep(0.15, 0.85, 0.5 + 0.5 * sin(atan(dir.y, dir.x) * 2.0 + 0.9));
+        float tone = mix(2.4, 0.95, smoothstep(0.5 - edge, 1.0 + edge, radius));
+        tone = mix(tone, 0.02, smoothstep(0.98 - edge, 1.12 + edge, radius));
+        tone = mix(tone, mix(0.03, 0.3, lobe) * (0.8 + 0.4 * rise), smoothstep(1.15 - edge, 1.3 + edge, radius));
+        float width = 0.035 + edge;
+        tone += 2.4 * exp(-pow((radius - 1.4) / width, 2.0)) * min(1.0, 0.06 / width) * (0.6 + 0.4 * rise);
+        return vec3(tone) * (1.0 - 0.5 * side) * (1.0 - 0.3 * ground) + 0.8 * key;
+      }
+      float width = 0.015 + soft * 2.0;
+      float rim = exp(-abs(radius - 1.0) / width) * 0.031 / width * (0.8 + smoothstep(-0.5, 0.8, p.y));
+      float band = 1.0 - 0.95 * smoothstep(1.04 - soft, 1.12 + soft, radius);
+      float wall = smoothstep(1.25, 1.55, radius) * (0.6 + 0.4 * rise);
+      float streak = smoothstep(0.2, 0.8, 0.5 + 0.5 * sin(atan(dir.y, dir.x) * 3.0 + 0.6));
+      vec3 color = vec3(0.004, 0.004, 0.005) + 0.02 * smoothstep(-0.4, 0.6, p.y);
+      color += vec3(1.0, 0.97, 0.94) * key * 4.0 + vec3(0.9, 0.95, 1.0) * side * 3.0 + ground * 1.2;
+      color += vec3(1.0, 0.98, 0.95) * rim;
+      color *= band;
+      return color + vec3(mix(0.45, 1.8, streak)) * wall;
+    }
+
+    vec3 shade(vec2 slope, vec3 v, float blur, vec3 f0) {
+      float steep = length(slope);
+      slope *= 3.0 * tanh(steep / 3.0) / max(steep, 1e-6);
+      vec3 n = normalize(vec3(-slope, 1.0));
+      vec3 r = reflect(v, n);
+      float facing = clamp(dot(n, -v), 0.0, 1.0);
+      return studio(r, blur) * (f0 + (1.0 - f0) * pow(1.0 - facing, 5.0));
+    }
+
+    vec3 aces(vec3 x) {
+      return clamp((x * (2.51 * x + 0.03)) / (x * (2.43 * x + 0.59) + 0.14), 0.0, 1.0);
+    }
+
+    void main() {
+      vec2 frag = gl_FragCoord.xy;
+      vec2 uv = (2.0 * frag - uResolution) / uUnit;
+      vec2 p = uv;
+      vec2 rowX = vec2(1.0, 0.0);
+      vec2 rowY = vec2(0.0, 1.0);
+      float amplitude = uAmplitude * uPresence;
+      for (float i = 1.0; i < 9.0; i++) {
+        if (i > uDetail) break;
+        float a = amplitude / i;
+        float soften = exp(0.3 - 0.3 * i);
+        float argX = i * uFrequency.x * p.y + uTime;
+        p.x += a * cos(argX);
+        rowX -= a * sin(argX) * i * uFrequency.x * soften * rowY;
+        float argY = i * uFrequency.y * p.x + uTime;
+        p.y += a * sin(argY);
+        rowY -= a * sin(argY) * i * uFrequency.y * soften * rowX;
+      }
+      float phase = uTime - p.x - p.y;
+      vec2 field = -(rowX + rowY);
+      float density = max(length(field), 1e-3);
+      vec2 across = field / density;
+      float k = uSharpness;
+      float sn = sin(phase);
+      float cs = cos(phase);
+      float th = tanh(k * sn);
+      float bevel = (1.0 - th * th) / tanh(k);
+      float fade = smoothstep(3.0, 9.0, 3.14159 * uUnit / density);
+      float weight = uDepth * uPresence * fade;
+      vec2 slope = k * cs * bevel * weight * across + slopeAt(frag / uResolution) * uRipple;
+      vec2 sweep = -k * bevel * (sn + 2.0 * k * cs * cs * th) * weight * density * 2.0 / uUnit * across;
+      vec2 stepX = dFdx(slope);
+      vec2 stepY = dFdy(slope);
+      vec2 crease = dot(stepX, stepX) > dot(stepY, stepY) ? stepX : stepY;
+      if (dot(crease, crease) > dot(sweep, sweep)) sweep = crease;
+      float bend = length(sweep);
+      float alpha = smoothstep(0.0, 0.1, length(slope));
+      vec3 f0 = mix(vec3(1.0), uTint, smoothstep(0.05, 0.6, length(slope))) * 0.92;
+      vec3 v = normalize(vec3(uv * 0.08, -1.0));
+      float blur = uRoughness * 0.35;
+      vec3 light;
+      if (bend < 0.01) {
+        light = shade(slope, v, blur + bend * 0.5, f0);
+      } else {
+        light = vec3(0.0);
+        for (float t = -0.375; t < 0.4; t += 0.25) {
+          light += shade(slope + sweep * t, v, blur + bend * 0.15, f0);
+        }
+        light *= 0.25;
+      }
+      vec3 color = pow(aces(light * uExposure), vec3(1.0 / 2.2));
+      float grain = fract(52.9829189 * fract(dot(frag, vec2(0.06711056, 0.00583715))));
+      color += (grain - 0.5) / 255.0;
+      fragColor = vec4(clamp(color, 0.0, 1.0) * alpha, alpha);
+    }`;
+
+    // Liquid Chrome Presets
+    const CHROME_PRESETS = [
+      { name: 'BLOOD', color: '#ff003c', label: 'CHROME: BLOOD' },
+      { name: 'SILVER', color: '#ffffff', label: 'CHROME: SILVER' },
+      { name: 'AMBER', color: '#ffaa00', label: 'CHROME: GOLD' },
+      { name: 'CYAN', color: '#00f0ff', label: 'CHROME: CYBER' },
+      { name: 'VIOLET', color: '#a800ff', label: 'CHROME: VIOLET' },
+      { name: 'OFF', color: null, label: 'CHROME: OFF' }
+    ];
+    let currentChromePresetIndex = 0;
+
+    let liquidChromeInstance = null;
+
+    class VanillaLiquidChrome {
+      constructor(canvas, container, options = {}) {
+        this.canvas = canvas;
+        this.container = container;
+        this.options = Object.assign({
+          color: '#ff003c',
+          speed: 0.18,
+          amplitude: 0.32,
+          frequencyX: 3.0,
+          frequencyY: 3.0,
+          detail: 4,
+          thickness: 1.0,
+          depth: 1.2,
+          roughness: 0.28,
+          exposure: 1.15,
+          interactive: true,
+          rippleStrength: 1.5,
+          rippleSize: 1.2,
+          tilt: 1.0,
+          intro: true,
+          lightMode: false,
+          maxDevicePixelRatio: 2.0
+        }, options);
+
+        this.init();
+      }
+
+      clamp(v, min, max) {
+        return Math.min(max, Math.max(min, v));
+      }
+
+      parseColor(val) {
+        if (Array.isArray(val)) return [0, 1, 2].map(i => this.clamp(Number(val[i]) || 0, 0, 1));
+        const text = String(val || '').trim();
+        const hex = /^#?([0-9a-f]{3}|[0-9a-f]{6})$/i.exec(text);
+        if (hex) {
+          const full = hex[1].length === 3 ? hex[1].replace(/./g, d => d + d) : hex[1];
+          return [0, 2, 4].map(i => parseInt(full.slice(i, i + 2), 16) / 255);
+        }
+        return [1, 0, 0.24];
+      }
+
+      compile(gl, type, src) {
+        const shader = gl.createShader(type);
+        if (!shader) return null;
+        gl.shaderSource(shader, src);
+        gl.compileShader(shader);
+        if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+          console.error(gl.getShaderInfoLog(shader));
+          gl.deleteShader(shader);
+          return null;
+        }
+        return shader;
+      }
+
+      link(gl, fragSrc) {
+        const vert = this.compile(gl, gl.VERTEX_SHADER, LC_VERTEX);
+        const frag = this.compile(gl, gl.FRAGMENT_SHADER, fragSrc);
+        const prog = vert && frag ? gl.createProgram() : null;
+        if (!vert || !frag || !prog) {
+          if (vert) gl.deleteShader(vert);
+          if (frag) gl.deleteShader(frag);
+          return null;
+        }
+        gl.attachShader(prog, vert);
+        gl.attachShader(prog, frag);
+        gl.linkProgram(prog);
+        gl.deleteShader(vert);
+        gl.deleteShader(frag);
+        if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) {
+          gl.deleteProgram(prog);
+          return null;
+        }
+        const uniforms = {};
+        const count = gl.getProgramParameter(prog, gl.ACTIVE_UNIFORMS);
+        for (let i = 0; i < count; i++) {
+          const info = gl.getActiveUniform(prog, i);
+          if (info) uniforms[info.name] = gl.getUniformLocation(prog, info.name);
+        }
+        return { program: prog, uniforms };
+      }
+
+      setColor(colorHex) {
+        this.options.color = colorHex;
+        this.settings.tint = this.parseColor(colorHex).map(c => Math.pow(c, 2.2));
+      }
+
+      init() {
+        const canvas = this.canvas;
+        const container = this.container;
+        const gl = canvas.getContext('webgl2', {
+          alpha: true,
+          premultipliedAlpha: true,
+          antialias: false,
+          depth: false,
+          stencil: false,
+          powerPreference: 'high-performance'
+        });
+        if (!gl) return;
+
+        this.gl = gl;
+        const chrome = this.link(gl, LC_CHROME);
+        if (!chrome) return;
+
+        const fluid = Boolean(gl.getExtension('EXT_color_buffer_float'));
+        const sim = fluid ? this.link(gl, LC_SIM) : null;
+        const slope = fluid ? this.link(gl, LC_SLOPE) : null;
+
+        const s = {
+          tint: this.parseColor(this.options.color).map(c => Math.pow(c, 2.2)),
+          speed: Math.max(0, this.options.speed),
+          amplitude: this.clamp(this.options.amplitude, 0, 2),
+          frequency: [Math.max(0.1, this.options.frequencyX), Math.max(0.1, this.options.frequencyY)],
+          detail: this.clamp(Math.round(this.options.detail), 1, 8),
+          thickness: this.clamp(this.options.thickness, 0.25, 4),
+          depth: Math.max(0, this.options.depth),
+          roughness: this.clamp(this.options.roughness, 0, 1),
+          exposure: Math.max(0, this.options.exposure),
+          interactive: this.options.interactive,
+          rippleStrength: Math.max(0, this.options.rippleStrength),
+          rippleSize: this.clamp(this.options.rippleSize, 0.2, 4),
+          tilt: Math.max(0, this.options.tilt),
+          intro: this.options.intro,
+          light: this.options.lightMode,
+          maxRatio: this.clamp(this.options.maxDevicePixelRatio, 0.5, 3)
+        };
+        this.settings = s;
+
+        const vao = gl.createVertexArray();
+        const grid = { width: 1, height: 1 };
+        const targets = [];
+        let slopeTarget = null;
+        let current = 0;
+        let unit = 1;
+        const pointer = { x: 0, y: 0, inside: false, ready: false, nx: 0, ny: 0 };
+        const view = { yaw: 0, pitch: 0, vyaw: 0, vpitch: 0 };
+        const strokes = [];
+        let time = Math.random() * 40;
+        let presence = 0.5;
+        let energy = 0;
+        let accumulator = 0;
+        let raf = 0;
+        let last = 0;
+        let visible = true;
+        let pageVisible = document.visibilityState !== 'hidden';
+
+        const makeTarget = (w, h) => {
+          const texture = gl.createTexture();
+          gl.bindTexture(gl.TEXTURE_2D, texture);
+          gl.texImage2D(gl.TEXTURE_2D, 0, gl.RG16F, w, h, 0, gl.RG, gl.HALF_FLOAT, null);
+          gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+          gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+          gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+          gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+          const framebuffer = gl.createFramebuffer();
+          gl.bindFramebuffer(gl.FRAMEBUFFER, framebuffer);
+          gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture, 0);
+          gl.clearColor(0, 0, 0, 1);
+          gl.clear(gl.COLOR_BUFFER_BIT);
+          gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+          return { texture, framebuffer };
+        };
+
+        const dropTarget = t => {
+          if (!t) return;
+          gl.deleteTexture(t.texture);
+          gl.deleteFramebuffer(t.framebuffer);
+        };
+
+        const resize = () => {
+          const rect = container.getBoundingClientRect();
+          const cssWidth = Math.max(1, rect.width);
+          const cssHeight = Math.max(1, rect.height);
+          const ratio = Math.min(
+            window.devicePixelRatio || 1,
+            this.settings.maxRatio,
+            Math.sqrt(LC_PIXEL_BUDGET / (cssWidth * cssHeight))
+          );
+          const width = Math.max(1, Math.round(cssWidth * ratio));
+          const height = Math.max(1, Math.round(cssHeight * ratio));
+          if (canvas.width !== width || canvas.height !== height) {
+            canvas.width = width;
+            canvas.height = height;
+          }
+          unit = Math.min(width, height);
+          if (!fluid || !sim || !slope) return;
+          const gridWidth = this.clamp(Math.round(cssWidth / LC_SIM_CELL), 16, 512);
+          const gridHeight = this.clamp(Math.round(cssHeight / LC_SIM_CELL), 16, 512);
+          if (gridWidth === grid.width && gridHeight === grid.height && targets.length) return;
+          targets.forEach(dropTarget);
+          targets.length = 0;
+          dropTarget(slopeTarget);
+          Object.assign(grid, { width: gridWidth, height: gridHeight });
+          targets.push(makeTarget(gridWidth, gridHeight), makeTarget(gridWidth, gridHeight));
+          slopeTarget = makeTarget(gridWidth, gridHeight);
+        };
+
+        const simulate = steps => {
+          if (!sim || !slope || !slopeTarget) return;
+          gl.useProgram(sim.program);
+          gl.viewport(0, 0, grid.width, grid.height);
+          gl.uniform2f(sim.uniforms.uSize, grid.width, grid.height);
+          gl.activeTexture(gl.TEXTURE0);
+          gl.uniform1i(sim.uniforms.uState, 0);
+          for (let step = 0; step < steps; step++) {
+            const stroke = step === 0 ? strokes.shift() : null;
+            if (stroke) {
+              gl.uniform4f(sim.uniforms.uStroke, stroke.ax, stroke.ay, stroke.bx, stroke.by);
+              gl.uniform2f(sim.uniforms.uImpulse, stroke.strength, stroke.radius);
+            } else {
+              gl.uniform2f(sim.uniforms.uImpulse, 0, 1);
+            }
+            const source = targets[current];
+            const destination = targets[1 - current];
+            gl.bindTexture(gl.TEXTURE_2D, source.texture);
+            gl.bindFramebuffer(gl.FRAMEBUFFER, destination.framebuffer);
+            gl.drawArrays(gl.TRIANGLES, 0, 3);
+            current = 1 - current;
+          }
+          gl.useProgram(slope.program);
+          gl.uniform2f(slope.uniforms.uSize, grid.width, grid.height);
+          gl.uniform1i(slope.uniforms.uState, 0);
+          gl.bindTexture(gl.TEXTURE_2D, targets[current].texture);
+          gl.bindFramebuffer(gl.FRAMEBUFFER, slopeTarget.framebuffer);
+          gl.drawArrays(gl.TRIANGLES, 0, 3);
+        };
+
+        const render = () => {
+          gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+          gl.viewport(0, 0, canvas.width, canvas.height);
+          const u = chrome.uniforms;
+          gl.useProgram(chrome.program);
+          gl.uniform2f(u.uResolution, canvas.width, canvas.height);
+          gl.uniform1f(u.uUnit, unit);
+          gl.uniform1f(u.uTime, time);
+          gl.uniform1f(u.uAmplitude, this.settings.amplitude);
+          gl.uniform2f(u.uFrequency, this.settings.frequency[0], this.settings.frequency[1]);
+          gl.uniform1f(u.uDepth, this.settings.depth);
+          gl.uniform1f(u.uDetail, this.settings.detail);
+          gl.uniform1f(u.uSharpness, 5 / (3 * this.settings.thickness));
+          gl.uniform1f(u.uPresence, 1 - Math.pow(1 - presence, 3));
+          gl.uniform3fv(u.uTint, this.settings.tint);
+          gl.uniform2f(u.uShift, view.yaw, view.pitch);
+          gl.uniform1f(u.uRoughness, this.settings.roughness);
+          gl.uniform1f(u.uExposure, this.settings.exposure);
+          gl.uniform1f(u.uLight, this.settings.light ? 1 : 0);
+          gl.activeTexture(gl.TEXTURE0);
+          gl.bindTexture(gl.TEXTURE_2D, slopeTarget ? slopeTarget.texture : null);
+          gl.uniform1i(u.uSlope, 0);
+          gl.uniform2f(u.uSlopeSize, grid.width, grid.height);
+          gl.uniform1f(u.uRipple, slopeTarget ? this.settings.rippleStrength * 2.2 : 0);
+          gl.drawArrays(gl.TRIANGLES, 0, 3);
+        };
+
+        const frame = now => {
+          raf = 0;
+          const dt = this.clamp((now - last) / 1000 || 0, 0, 0.05);
+          last = Math.max(last, now);
+          time += dt * this.settings.speed;
+          presence = Math.min(1, presence + dt / 1.8);
+
+          const hovering = this.settings.interactive && pointer.inside;
+          const reach = this.settings.tilt;
+          const targetYaw = (hovering ? pointer.nx * 0.35 : 0.22 * Math.sin(time * 1.3)) * reach;
+          const targetPitch = (hovering ? -pointer.ny * 0.28 : 0.16 * Math.sin(time * 0.9 + 1.7)) * reach;
+          const stiffness = 36;
+          const damping = 2 * Math.sqrt(stiffness) * 0.95;
+          view.vyaw += ((targetYaw - view.yaw) * stiffness - view.vyaw * damping) * dt;
+          view.vpitch += ((targetPitch - view.pitch) * stiffness - view.vpitch * damping) * dt;
+          view.yaw += view.vyaw * dt;
+          view.pitch += view.vpitch * dt;
+
+          gl.bindVertexArray(vao);
+          if (slopeTarget) {
+            accumulator += dt;
+            const steps = Math.min(4, Math.floor(accumulator / LC_SIM_STEP));
+            accumulator -= steps * LC_SIM_STEP;
+            if (steps > 0) {
+              simulate(steps);
+              energy = Math.max(0, energy * Math.pow(0.982, steps));
+            }
+          }
+          render();
+
+          const settling =
+            Math.abs(view.vyaw) + Math.abs(view.vpitch) > 1e-4 ||
+            Math.abs(targetYaw - view.yaw) + Math.abs(targetPitch - view.pitch) > 1e-4;
+          const busy = this.settings.speed > 0 || presence < 1 || settling || energy > 0.002 || strokes.length > 0;
+          if (busy && visible && pageVisible) raf = requestAnimationFrame(frame);
+        };
+
+        const wake = () => {
+          if (raf || !visible || !pageVisible) return;
+          last = performance.now();
+          raf = requestAnimationFrame(frame);
+        };
+
+        const toGrid = (clientX, clientY) => {
+          const rect = container.getBoundingClientRect();
+          return {
+            x: ((clientX - rect.left) / rect.width) * grid.width,
+            y: (1 - (clientY - rect.top) / rect.height) * grid.height,
+            nx: ((clientX - rect.left) / rect.width) * 2 - 1,
+            ny: ((clientY - rect.top) / rect.height) * 2 - 1,
+            inside: clientX >= rect.left && clientX <= rect.right && clientY >= rect.top && clientY <= rect.bottom
+          };
+        };
+
+        const push = stroke => {
+          if (!slopeTarget || !this.settings.interactive) return;
+          strokes.push(stroke);
+          if (strokes.length > 6) strokes.shift();
+          energy = 1;
+        };
+
+        const onPointerMove = event => {
+          const spot = toGrid(event.clientX, event.clientY);
+          pointer.nx = this.clamp(spot.nx, -1, 1);
+          pointer.ny = this.clamp(spot.ny, -1, 1);
+          pointer.inside = spot.inside;
+          if (spot.inside && pointer.ready) {
+            const travel = Math.hypot(spot.x - pointer.x, spot.y - pointer.y);
+            if (travel > 0.25) {
+              push({
+                ax: pointer.x,
+                ay: pointer.y,
+                bx: spot.x,
+                by: spot.y,
+                strength: -Math.min(0.45, 0.04 + travel * 0.045) * this.settings.rippleSize,
+                radius: 4 * this.settings.rippleSize
+              });
+            }
+          }
+          pointer.x = spot.x;
+          pointer.y = spot.y;
+          pointer.ready = spot.inside;
+          wake();
+        };
+
+        const onPointerDown = event => {
+          const spot = toGrid(event.clientX, event.clientY);
+          if (!spot.inside) return;
+          push({
+            ax: spot.x,
+            ay: spot.y,
+            bx: spot.x,
+            by: spot.y,
+            strength: -1.6 * this.settings.rippleSize,
+            radius: 6 * this.settings.rippleSize
+          });
+          wake();
+        };
+
+        const onLeave = () => {
+          pointer.inside = false;
+          pointer.ready = false;
+          wake();
+        };
+
+        window.addEventListener('pointermove', onPointerMove, { passive: true });
+        window.addEventListener('pointerdown', onPointerDown, { passive: true });
+        document.documentElement.addEventListener('pointerleave', onLeave);
+
+        window.addEventListener('resize', () => {
+          resize();
+          render();
+          wake();
+        });
+
+        document.addEventListener('visibilitychange', () => {
+          pageVisible = document.visibilityState !== 'hidden';
+          wake();
+        });
+
+        resize();
+        wake();
+      }
+    }
+
+    function initLiquidChrome() {
+      const container = document.getElementById('liquid-chrome-container');
+      const canvas = document.getElementById('liquid-chrome-canvas');
+      if (container && canvas) {
+        try {
+          liquidChromeInstance = new VanillaLiquidChrome(canvas, container, {
+            color: '#ff003c',
+            speed: 0.18,
+            amplitude: 0.32,
+            detail: 4,
+            depth: 1.2,
+            roughness: 0.28,
+            exposure: 1.15,
+            interactive: true,
+            rippleStrength: 1.4,
+            rippleSize: 1.1
+          });
+        } catch (e) {
+          console.warn('WebGL2 LiquidChrome could not be initialized:', e);
+        }
+      }
+    }
+
+    function cycleLiquidChromeColor() {
+      currentChromePresetIndex = (currentChromePresetIndex + 1) % CHROME_PRESETS.length;
+      const preset = CHROME_PRESETS[currentChromePresetIndex];
+      const container = document.getElementById('liquid-chrome-container');
+      const label = document.getElementById('chrome-theme-label');
+      if (label) label.innerText = preset.label;
+
+      if (preset.color === null) {
+        if (container) container.classList.add('opacity-0');
+        showToast('Liquid Chrome: Disabled', 'info');
+      } else {
+        if (container) container.classList.remove('opacity-0');
+        if (liquidChromeInstance) {
+          liquidChromeInstance.setColor(preset.color);
+        }
+        cyberAudio.playBeep(820, 'triangle', 0.05);
+        showToast(`Liquid Chrome: ${preset.name} Mode`, 'success');
+      }
+    }
+
+    // --- Audio Synthesizer (Web Audio API) ---
+    class CyberAudioEngine {
+      constructor() {
+        this.ctx = null;
+        this.muted = false;
+      }
+      init() {
+        if (!this.ctx) {
+          const AudioContext = window.AudioContext || window.webkitAudioContext;
+          if (AudioContext) this.ctx = new AudioContext();
+        }
+        if (this.ctx && this.ctx.state === 'suspended') {
+          this.ctx.resume();
+        }
+      }
+      playBeep(freq = 600, type = 'sine', duration = 0.08, gainVal = 0.05) {
+        if (this.muted) return;
+        try {
+          this.init();
+          if (!this.ctx) return;
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = type;
+          osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+          gain.gain.setValueAtTime(gainVal, this.ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + duration);
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          osc.start();
+          osc.stop(this.ctx.currentTime + duration);
+        } catch (e) {
+          // ignore audio context restrictions
+        }
+      }
+      playAccessGranted() {
+        if (this.muted) return;
+        this.playBeep(523.25, 'triangle', 0.1, 0.08); // C5
+        setTimeout(() => this.playBeep(659.25, 'triangle', 0.12, 0.08), 90); // E5
+        setTimeout(() => this.playBeep(1046.50, 'square', 0.25, 0.08), 180); // C6
+      }
+      playAccessDenied() {
+        if (this.muted) return;
+        this.playBeep(220, 'sawtooth', 0.2, 0.1);
+        setTimeout(() => this.playBeep(180, 'sawtooth', 0.3, 0.1), 150);
+      }
+      playKeyGen() {
+        if (this.muted) return;
+        this.playBeep(880, 'sine', 0.05, 0.05);
+        setTimeout(() => this.playBeep(1320, 'sine', 0.08, 0.05), 60);
+      }
+      toggleMute() {
+        this.muted = !this.muted;
+        return this.muted;
+      }
+    }
+    const cyberAudio = new CyberAudioEngine();
+
+    // --- Firebase Default / Placeholder Configuration ---
+    let defaultFirebaseConfig = {
+      apiKey: "AIzaSyCYBER-PLACEHOLDER-KEY-DEVREAL",
+      authDomain: "cyber-license-vault.firebaseapp.com",
+      databaseURL: "https://cyber-license-vault-default-rtdb.firebaseio.com",
+      projectId: "cyber-license-vault",
+      storageBucket: "cyber-license-vault.appspot.com",
+      messagingSenderId: "1098273645",
+      appId: "1:1098273645:web:cyber987654"
+    };
+
+    // Load custom config from localStorage if present
+    const savedConfig = localStorage.getItem('cyber_firebase_config');
+    let firebaseConfig = savedConfig ? JSON.parse(savedConfig) : defaultFirebaseConfig;
+
+    // --- State Storage ---
+    let isFirebaseLive = false;
+    let firebaseDb = null;
+    let currentActiveTab = 'dashboard';
+    let keysState = {};
+    let appsState = {};
+    let selectedKeyForExtend = null;
+    let currentCodeLanguage = 'csharp';
+    let simulationMode = false;
+
+    // --- Initialize Firebase or Fallback Simulation Engine ---
+    function initDatabase() {
+      const bannerHost = document.getElementById('banner-db-host');
+      const docsDbUrl = document.getElementById('docs-code-dburl');
+      if (bannerHost) bannerHost.innerText = firebaseConfig.databaseURL;
+      if (docsDbUrl) docsDbUrl.value = firebaseConfig.databaseURL;
+
+      try {
+        if (typeof firebase !== 'undefined' && firebase.apps) {
+          if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+          }
+          firebaseDb = firebase.database();
+          
+          // Test connection & listen to data
+          updateFirebaseStatus('connecting', 'LINKING WEBSOCKET...');
+          
+          // Connect to Firebase /keys
+          firebaseDb.ref('keys').on('value', (snapshot) => {
+            const data = snapshot.val() || {};
+            keysState = data;
+            isFirebaseLive = true;
+            simulationMode = false;
+            updateFirebaseStatus('live', 'REALTIME SYNCED');
+            renderDashboardStats();
+            renderKeysTable();
+            addTelemetryLog('Firebase Realtime DB keys synchronized.');
+          }, (err) => {
+            console.warn("Firebase RTDB connection error, activating local mirror simulation:", err);
+            activateSimulationMode();
+          });
+
+          // Connect to Firebase /apps
+          firebaseDb.ref('apps').on('value', (snapshot) => {
+            const data = snapshot.val() || {};
+            appsState = data;
+            renderAppsRegistry();
+            renderDashboardStats();
+            populateTargetAppDropdowns();
+          });
+
+          // Connect to Firebase /logs
+          firebaseDb.ref('logs').limitToLast(20).on('child_added', (snapshot) => {
+            const log = snapshot.val();
+            if (log && log.message) {
+              addTelemetryLog(log.message, log.timestamp);
+            }
+          });
+
+        } else {
+          activateSimulationMode();
+        }
+      } catch (err) {
+        console.warn("Firebase initialization failed, falling back to local simulation mode:", err);
+        activateSimulationMode();
+      }
+    }
+
+    // --- Local Simulation Engine for Immediate Offline / Demo Work ---
+    function activateSimulationMode() {
+      simulationMode = true;
+      isFirebaseLive = false;
+      updateFirebaseStatus('mock', 'SIMULATION MODE (LOCAL)');
+      
+      // Load or seed initial test data
+      const storedKeys = localStorage.getItem('cyber_mock_keys');
+      if (storedKeys) {
+        keysState = JSON.parse(storedKeys);
+      } else {
+        // Initial sample seed
+        const now = Date.now();
+        keysState = {
+          "REAL-89X2-90LA-77BQ-01AA": {
+            key: "REAL-89X2-90LA-77BQ-01AA",
+            targetApp: "CyberStrike_V3",
+            targetAppId: "cyberstrike-v3",
+            status: "ACTIVE",
+            createdAt: now - 86400000,
+            expiresAt: now + (29 * 86400000),
+            lifespanDays: 30,
+            maxUses: 1,
+            currentUses: 1,
+            boundHwid: "HWID-8FA2-C391-77BA",
+            hwidLockEnabled: true,
+            note: "DevReal VIP Core"
+          },
+          "AIM-9901-XK33-PP91-4402": {
+            key: "AIM-9901-XK33-PP91-4402",
+            targetApp: "MatrixAim_Pro",
+            targetAppId: "matrixaim-pro",
+            status: "ACTIVE",
+            createdAt: now - 3600000,
+            expiresAt: null, // lifetime
+            lifespanDays: "unlimited",
+            maxUses: "unlimited",
+            currentUses: 4,
+            boundHwid: null,
+            hwidLockEnabled: false,
+            note: "Lifetime Enterprise Pass"
+          }
+        };
+        localStorage.setItem('cyber_mock_keys', JSON.stringify(keysState));
+      }
+
+      // Initial apps seed
+      const storedApps = localStorage.getItem('cyber_mock_apps');
+      if (storedApps) {
+        appsState = JSON.parse(storedApps);
+      } else {
+        appsState = {
+          "cyberstrike-v3": {
+            appName: "CyberStrike_V3",
+            appId: "cyberstrike-v3",
+            version: "v3.1.2",
+            lastSeen: Date.now() - 45000, // 45s ago (online)
+            status: "ONLINE",
+            validationsCount: 142
+          },
+          "matrixaim-pro": {
+            appName: "MatrixAim_Pro",
+            appId: "matrixaim-pro",
+            version: "v2.0.4",
+            lastSeen: Date.now() - 360000, // 6m ago (offline)
+            status: "OFFLINE",
+            validationsCount: 57
+          }
+        };
+        localStorage.setItem('cyber_mock_apps', JSON.stringify(appsState));
+      }
+
+      renderDashboardStats();
+      renderKeysTable();
+      renderAppsRegistry();
+      populateTargetAppDropdowns();
+      addTelemetryLog('Simulation mode active. Mirroring all actions in Local Storage.');
+    }
+
+    // --- Status Indicator Updates ---
+    function updateFirebaseStatus(mode, label) {
+      const dot = document.getElementById('firebase-dot');
+      const text = document.getElementById('firebase-label');
+      const bannerText = document.getElementById('banner-text');
+
+      if (!dot || !text) return;
+      text.innerText = label;
+
+      if (mode === 'live') {
+        dot.className = "w-2.5 h-2.5 rounded-full bg-cyber-green shadow-neon-green animate-pulse";
+        if (bannerText) bannerText.innerHTML = `FIREBASE REALTIME DB: <strong class="text-cyber-green">CONNECTED &amp; SYNCED</strong>. Node: <code class="text-cyber-red px-1 bg-black/40 rounded">${firebaseConfig.databaseURL}</code>`;
+      } else if (mode === 'connecting') {
+        dot.className = "w-2.5 h-2.5 rounded-full bg-yellow-400 animate-ping";
+        if (bannerText) bannerText.innerHTML = `FIREBASE REALTIME DB: <strong class="text-yellow-400">CONNECTING...</strong>`;
+      } else {
+        dot.className = "w-2.5 h-2.5 rounded-full bg-cyan-400";
+        if (bannerText) bannerText.innerHTML = `FIREBASE REALTIME DB: <strong class="text-cyan-400">SIMULATION MIRROR (LOCAL)</strong>. Configure Firebase credentials via settings icon to switch to live cloud.`;
+      }
+    }
+
+    // --- Access Control / Login System ---
+    function handleAuth(event) {
+      event.preventDefault();
+      cyberAudio.init();
+      const input = document.getElementById('auth-password');
+      const alertBox = document.getElementById('auth-alert');
+      const val = (input.value || '').trim();
+
+      // Check password: "DevReal" or "real" (case-insensitive)
+      if (val.toLowerCase() === 'devreal' || val.toLowerCase() === 'real') {
+        cyberAudio.playAccessGranted();
+        alertBox.className = "p-3 rounded font-mono text-xs border border-cyber-green/50 bg-green-950/40 text-cyber-green text-center block";
+        alertBox.innerHTML = '<i class="fa-solid fa-circle-check"></i> CLEARANCE ACCEPTED // UNLOCKING CORE...';
+
+        setTimeout(() => {
+          const lockscreen = document.getElementById('lockscreen');
+          lockscreen.classList.add('opacity-0', 'pointer-events-none', '-translate-y-8');
+          sessionStorage.setItem('cyber_authenticated', 'true');
+          showToast('CLEARANCE VERIFIED: Welcome, Operator.', 'success');
+          addTelemetryLog('Operator authenticated into terminal command deck.');
+        }, 600);
+
+      } else {
+        cyberAudio.playAccessDenied();
+        alertBox.className = "p-3 rounded font-mono text-xs border border-cyber-red/50 bg-red-950/40 text-cyber-red text-center block";
+        alertBox.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> ACCESS DENIED // INVALID CLEARANCE PHRASE';
+        input.value = '';
+        input.focus();
+        showToast('SECURITY BREACH: Invalid credentials submitted.', 'error');
+      }
+    }
+
+    function relockTerminal() {
+      cyberAudio.playBeep(440, 'sawtooth', 0.1);
+      sessionStorage.removeItem('cyber_authenticated');
+      const lockscreen = document.getElementById('lockscreen');
+      const alertBox = document.getElementById('auth-alert');
+      const input = document.getElementById('auth-password');
+      if (alertBox) alertBox.className = "hidden";
+      if (input) input.value = '';
+      lockscreen.classList.remove('opacity-0', 'pointer-events-none', '-translate-y-8');
+      showToast('TERMINAL RELOCKED', 'info');
+    }
+
+    function togglePassVisibility(inputId, btn) {
+      const el = document.getElementById(inputId);
+      const icon = btn.querySelector('i');
+      if (el.type === 'password') {
+        el.type = 'text';
+        icon.className = 'fa-regular fa-eye-slash text-sm';
+      } else {
+        el.type = 'password';
+        icon.className = 'fa-regular fa-eye text-sm';
+      }
+    }
+
+    // --- Tab Switching ---
+    function switchTab(tabId) {
+      cyberAudio.playBeep(700, 'sine', 0.04);
+      currentActiveTab = tabId;
+
+      // Hide all tabs
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+      const activeEl = document.getElementById('tab-' + tabId);
+      if (activeEl) activeEl.classList.remove('hidden');
+
+      // Update Nav Buttons
+      document.querySelectorAll('.nav-btn').forEach(btn => {
+        btn.className = "nav-btn px-4 py-2 rounded text-gray-400 hover:text-white hover:bg-white/5 border border-transparent hover:border-white/10 transition-all flex items-center gap-2";
+      });
+      const activeBtn = document.getElementById('nav-' + tabId);
+      if (activeBtn) {
+        activeBtn.className = "nav-btn px-4 py-2 rounded text-cyber-red bg-cyber-red/10 border border-cyber-red/50 transition-all flex items-center gap-2";
+      }
+
+      // Update Mobile Nav
+      document.querySelectorAll('.nav-btn-mobile').forEach(btn => btn.className = "nav-btn-mobile px-2 py-1 text-gray-400");
+
+      if (tabId === 'docs') {
+        renderCodeSnippets();
+      }
+    }
+
+    // --- Dynamic Target App Dropdown Population ---
+    function populateTargetAppDropdowns() {
+      const dropdowns = [
+        document.getElementById('quick-target-app'),
+        document.getElementById('gen-target-app'),
+        document.getElementById('vault-filter-app'),
+        document.getElementById('docs-code-app-select')
+      ];
+
+      const appKeys = Object.keys(appsState);
+      dropdowns.forEach(dd => {
+        if (!dd) return;
+        const currentVal = dd.value;
+        const isFilter = dd.id === 'vault-filter-app';
+        
+        let html = isFilter ? '<option value="ALL">ALL APPLICATIONS</option>' : '';
+        
+        if (appKeys.length === 0) {
+          html += '<option value="" disabled selected>No active apps detected (Listen to /apps)</option>';
+        } else {
+          appKeys.forEach(id => {
+            const app = appsState[id];
+            const name = app.appName || id;
+            html += `<option value="${id}">${name} (${app.version || 'v1.0'})</option>`;
+          });
+        }
+        dd.innerHTML = html;
+        if (currentVal && appKeys.includes(currentVal)) {
+          dd.value = currentVal;
+        }
+      });
+
+      // Update preview
+      updateKeyPreview();
+    }
+
+    // --- Key Generator Logic ---
+    function updateBatchDisplay(val) {
+      document.getElementById('batch-count-display').innerText = val + (val == 1 ? ' KEY' : ' KEYS');
+      cyberAudio.playBeep(500 + val * 10, 'sine', 0.02);
+    }
+
+    function setPresetPrefix(prefix) {
+      document.getElementById('gen-prefix').value = prefix;
+      cyberAudio.playBeep(750, 'triangle', 0.04);
+      updateKeyPreview();
+    }
+
+    function handleLifespanChange() {
+      const val = document.getElementById('gen-lifespan').value;
+      const customWrapper = document.getElementById('custom-days-wrapper');
+      if (val === 'custom') {
+        customWrapper.classList.remove('hidden');
+      } else {
+        customWrapper.classList.add('hidden');
+      }
+    }
+
+    function getCharset() {
+      let chars = "";
+      if (document.getElementById('charset-upper').checked) chars += "ABCDEFGHJKLMNPQRSTUVWXYZ"; // exclude easily confused I, O
+      if (document.getElementById('charset-lower').checked) chars += "abcdefghjkmnpqrstuvwxyz";
+      if (document.getElementById('charset-numbers').checked) chars += "23456789"; // exclude 0, 1
+      if (document.getElementById('charset-symbols').checked) chars += "!#$@%";
+      if (chars.length === 0) chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+      return chars;
+    }
+
+    function generateSingleKeyString(prefix, segmentsCount, segLen, separator, charset) {
+      let key = "";
+      if (prefix && prefix.trim().length > 0) {
+        key += prefix.trim().toUpperCase() + separator;
+      }
+
+      const randomVals = new Uint32Array(segmentsCount * segLen);
+      window.crypto.getRandomValues(randomVals);
+      let randIdx = 0;
+
+      const segs = [];
+      for (let s = 0; s < segmentsCount; s++) {
+        let segStr = "";
+        for (let c = 0; c < segLen; c++) {
+          const char = charset[randomVals[randIdx++] % charset.length];
+          segStr += char;
+        }
+        segs.push(segStr);
+      }
+      key += segs.join(separator);
+      return key;
+    }
+
+    function updateKeyPreview() {
+      const previewEl = document.getElementById('key-preview-text');
+      if (!previewEl) return;
+      const prefix = document.getElementById('gen-prefix').value || "REAL";
+      const segmentsCount = parseInt(document.getElementById('gen-segments').value) || 4;
+      const segLen = parseInt(document.getElementById('gen-seg-length').value) || 4;
+      const sepRadio = document.querySelector('input[name="gen-separator"]:checked');
+      const separator = sepRadio ? sepRadio.value : "-";
+      
+      const sample = generateSingleKeyString(prefix, segmentsCount, segLen, separator, getCharset());
+      previewEl.innerText = sample;
+    }
+
+    // --- Commit Key(s) to Firebase or Local DB ---
+    async function commitKeyToStorage(keyData) {
+      if (isFirebaseLive && firebaseDb) {
+        await firebaseDb.ref('keys/' + keyData.key).set(keyData);
+        // Log event to /logs
+        firebaseDb.ref('logs').push({
+          message: `Key ${keyData.key} generated for [${keyData.targetApp}]`,
+          timestamp: Date.now()
+        });
+      } else {
+        // Simulation mode
+        keysState[keyData.key] = keyData;
+        localStorage.setItem('cyber_mock_keys', JSON.stringify(keysState));
+        renderDashboardStats();
+        renderKeysTable();
+      }
+    }
+
+    // Quick Generate
+    async function handleQuickGenerate() {
+      cyberAudio.init();
+      const targetAppSelect = document.getElementById('quick-target-app');
+      const targetAppId = targetAppSelect.value;
+      if (!targetAppId) {
+        showToast('Please select or register a Target Application first', 'error');
+        return;
+      }
+      const targetAppName = appsState[targetAppId]?.appName || targetAppId;
+      const prefix = (document.getElementById('quick-prefix').value || 'REAL').trim();
+      const lifespanVal = document.getElementById('quick-days').value;
+      const note = document.getElementById('quick-note').value || 'Express Key';
+
+      const keyString = generateSingleKeyString(prefix, 4, 4, "-", "ABCDEFGHJKLMNPQRSTUVWXYZ23456789");
+      const now = Date.now();
+      let expiresAt = null;
+      if (lifespanVal !== 'unlimited') {
+        expiresAt = now + (parseInt(lifespanVal) * 86400000);
+      }
+
+      const keyObj = {
+        key: keyString,
+        targetApp: targetAppName,
+        targetAppId: targetAppId,
+        status: "ACTIVE",
+        createdAt: now,
+        expiresAt: expiresAt,
+        lifespanDays: lifespanVal,
+        maxUses: 1,
+        currentUses: 0,
+        boundHwid: null,
+        hwidLockEnabled: true,
+        note: note
+      };
+
+      await commitKeyToStorage(keyObj);
+      cyberAudio.playKeyGen();
+
+      document.getElementById('quick-result-box').classList.remove('hidden');
+      document.getElementById('quick-result-key').innerText = keyString;
+      showToast(`Key Created: ${keyString}`, 'success');
+      addTelemetryLog(`Express Key ${keyString} provisioned for ${targetAppName}.`);
+    }
+
+    // Batch Key Generation
+    async function handleBatchGenerate(event) {
+      event.preventDefault();
+      cyberAudio.init();
+
+      const targetAppSelect = document.getElementById('gen-target-app');
+      const targetAppId = targetAppSelect.value;
+      if (!targetAppId) {
+        showToast('No active target application selected', 'error');
+        return;
+      }
+      const targetAppName = appsState[targetAppId]?.appName || targetAppId;
+      const prefix = (document.getElementById('gen-prefix').value || '').trim();
+      const note = document.getElementById('gen-note').value || 'Batch Forge';
+      const segmentsCount = parseInt(document.getElementById('gen-segments').value) || 4;
+      const segLen = parseInt(document.getElementById('gen-seg-length').value) || 4;
+      const sepRadio = document.querySelector('input[name="gen-separator"]:checked');
+      const separator = sepRadio ? sepRadio.value : "-";
+      const charset = getCharset();
+
+      // Lifespan calculation
+      const lifespanOption = document.getElementById('gen-lifespan').value;
+      let days = lifespanOption;
+      if (lifespanOption === 'custom') {
+        days = parseInt(document.getElementById('gen-custom-days').value) || 30;
+      }
+
+      const maxUsesVal = document.getElementById('gen-max-uses').value;
+      const hwidLock = document.getElementById('gen-hwid-lock').checked;
+      const quantity = parseInt(document.getElementById('gen-quantity').value) || 1;
+
+      // Show Progress UI
+      const progressWrapper = document.getElementById('gen-progress-wrapper');
+      const progressBar = document.getElementById('gen-progress-bar');
+      const progressText = document.getElementById('gen-progress-text');
+      const submitBtn = document.getElementById('generate-submit-btn');
+
+      progressWrapper.classList.remove('hidden');
+      submitBtn.disabled = true;
+
+      const generatedKeyList = [];
+      const now = Date.now();
+
+      for (let i = 1; i <= quantity; i++) {
+        const keyString = generateSingleKeyString(prefix, segmentsCount, segLen, separator, charset);
+        
+        let expiresAt = null;
+        if (days !== 'unlimited') {
+          expiresAt = now + (parseInt(days) * 86400000);
+        }
+
+        const keyObj = {
+          key: keyString,
+          targetApp: targetAppName,
+          targetAppId: targetAppId,
+          status: "ACTIVE",
+          createdAt: now,
+          expiresAt: expiresAt,
+          lifespanDays: days,
+          maxUses: maxUsesVal === 'unlimited' ? 'unlimited' : parseInt(maxUsesVal),
+          currentUses: 0,
+          boundHwid: null,
+          hwidLockEnabled: hwidLock,
+          note: note
+        };
+
+        await commitKeyToStorage(keyObj);
+        generatedKeyList.push(keyString);
+
+        // Progress update
+        const percent = Math.round((i / quantity) * 100);
+        progressBar.style.width = percent + '%';
+        progressText.innerText = `${percent}% (${i}/${quantity})`;
+        cyberAudio.playBeep(600 + i * 15, 'sine', 0.02);
+      }
+
+      setTimeout(() => {
+        progressWrapper.classList.add('hidden');
+        submitBtn.disabled = false;
+        cyberAudio.playAccessGranted();
+
+        // Show Results container
+        const resultsContainer = document.getElementById('batch-results-container');
+        const resultsTitle = document.getElementById('batch-results-title');
+        const resultsTextarea = document.getElementById('batch-keys-textarea');
+
+        resultsContainer.classList.remove('hidden');
+        resultsTitle.innerText = `${quantity} LICENSE ${quantity === 1 ? 'KEY' : 'KEYS'} FORGED & COMMITTED TO DATABASE`;
+        resultsTextarea.value = generatedKeyList.join('\n');
+
+        showToast(`Synthesized ${quantity} Keys successfully!`, 'success');
+        addTelemetryLog(`Batch generated ${quantity} keys for application ${targetAppName}.`);
+      }, 300);
+    }
+
+    function copyGeneratedBatch() {
+      const ta = document.getElementById('batch-keys-textarea');
+      copyToClipboard(ta.value);
+    }
+
+    function downloadBatchTxt() {
+      const text = document.getElementById('batch-keys-textarea').value;
+      downloadFile(text, 'cyber_keys_batch.txt', 'text/plain');
+    }
+
+    // --- Master Table: Key Vault Management ---
+    function renderKeysTable() {
+      const tbody = document.getElementById('keys-table-body');
+      if (!tbody) return;
+
+      const keysArray = Object.values(keysState);
+      const totalCount = keysArray.length;
+      document.getElementById('vault-count-total').innerText = totalCount;
+
+      if (totalCount === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="8" class="py-12 text-center text-gray-500 font-mono text-xs">
+              <i class="fa-solid fa-folder-open text-2xl mb-2 text-cyber-red/40"></i>
+              <p>NO LICENSE KEYS RECORDED IN DATABASE</p>
+              <button onclick="switchTab('generator')" class="mt-2 text-cyber-red underline">Forge First Key</button>
+            </td>
+          </tr>
+        `;
+        document.getElementById('vault-count-visible').innerText = 0;
+        return;
+      }
+
+      // Sort newest first
+      keysArray.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+
+      const filterApp = document.getElementById('vault-filter-app')?.value || 'ALL';
+      const filterStatus = document.getElementById('vault-filter-status')?.value || 'ALL';
+      const searchQuery = (document.getElementById('vault-search-input')?.value || '').trim().toLowerCase();
+
+      let visibleCount = 0;
+      let html = '';
+
+      const now = Date.now();
+
+      keysArray.forEach(k => {
+        // Expiration check
+        let isExpired = false;
+        if (k.expiresAt && now > k.expiresAt) {
+          isExpired = true;
+        }
+
+        // Compute effective status
+        let effectiveStatus = k.status || 'ACTIVE';
+        if (effectiveStatus !== 'REVOKED' && isExpired) {
+          effectiveStatus = 'EXPIRED';
+        }
+
+        // Filtering
+        if (filterApp !== 'ALL' && k.targetAppId !== filterApp) return;
+        if (filterStatus !== 'ALL' && effectiveStatus !== filterStatus) return;
+        
+        if (searchQuery) {
+          const matchKey = (k.key || '').toLowerCase().includes(searchQuery);
+          const matchApp = (k.targetApp || '').toLowerCase().includes(searchQuery);
+          const matchHwid = (k.boundHwid || '').toLowerCase().includes(searchQuery);
+          const matchNote = (k.note || '').toLowerCase().includes(searchQuery);
+          if (!matchKey && !matchApp && !matchHwid && !matchNote) return;
+        }
+
+        visibleCount++;
+
+        // Status Badge Style
+        let statusBadge = '';
+        if (effectiveStatus === 'ACTIVE') {
+          statusBadge = '<span class="px-2 py-0.5 rounded-full bg-green-950/60 border border-green-500/50 text-cyber-green text-[10px] font-bold">ACTIVE</span>';
+        } else if (effectiveStatus === 'EXPIRED') {
+          statusBadge = '<span class="px-2 py-0.5 rounded-full bg-yellow-950/60 border border-yellow-500/50 text-yellow-400 text-[10px] font-bold">EXPIRED</span>';
+        } else {
+          statusBadge = '<span class="px-2 py-0.5 rounded-full bg-red-950/60 border border-cyber-red/50 text-cyber-red text-[10px] font-bold">REVOKED</span>';
+        }
+
+        // Format Expiry
+        let expiryDisplay = 'UNLIMITED';
+        if (k.expiresAt) {
+          const diffMs = k.expiresAt - now;
+          if (diffMs > 0) {
+            const daysLeft = Math.floor(diffMs / 86400000);
+            const hoursLeft = Math.floor((diffMs % 86400000) / 3600000);
+            expiryDisplay = `<span class="text-white">${daysLeft}d ${hoursLeft}h</span> <span class="text-[10px] text-gray-500">(${new Date(k.expiresAt).toLocaleDateString()})</span>`;
+          } else {
+            expiryDisplay = `<span class="text-cyber-red font-bold">EXPIRED</span> <span class="text-[10px] text-gray-500">(${new Date(k.expiresAt).toLocaleDateString()})</span>`;
+          }
+        }
+
+        // HWID display
+        let hwidDisplay = '';
+        if (k.hwidLockEnabled) {
+          if (k.boundHwid) {
+            hwidDisplay = `
+              <div class="flex items-center gap-1.5">
+                <span class="text-cyan-400 text-[11px] truncate max-w-[120px]" title="${k.boundHwid}">${k.boundHwid}</span>
+                <button onclick="resetKeyHwid('${k.key}')" title="Reset Hardware ID Lock" class="text-gray-400 hover:text-cyber-red">
+                  <i class="fa-solid fa-arrows-rotate text-[10px]"></i>
+                </button>
+              </div>
+            `;
+          } else {
+            hwidDisplay = '<span class="text-gray-400 italic">Unbound (Locks on 1st use)</span>';
+          }
+        } else {
+          hwidDisplay = '<span class="text-gray-600">Lock Disabled</span>';
+        }
+
+        html += `
+          <tr class="hover:bg-white/[0.02] transition-colors border-b border-cyber-red/10">
+            <td class="py-3 px-4 font-bold tracking-wider text-white">
+              <div class="flex items-center gap-2">
+                <span class="font-mono text-sm">${k.key}</span>
+                <button onclick="copyToClipboard('${k.key}')" title="Copy Key" class="text-gray-500 hover:text-cyber-red transition-colors">
+                  <i class="fa-solid fa-copy text-xs"></i>
+                </button>
+              </div>
+            </td>
+            <td class="py-3 px-4 text-gray-300">
+              <span class="px-2 py-0.5 rounded bg-black/60 border border-cyber-red/20 text-xs">${k.targetApp}</span>
+            </td>
+            <td class="py-3 px-4">${statusBadge}</td>
+            <td class="py-3 px-4 text-gray-300">
+              ${k.currentUses || 0} / <span class="text-gray-500">${k.maxUses === 'unlimited' ? '&infin;' : k.maxUses}</span>
+            </td>
+            <td class="py-3 px-4 font-mono">${expiryDisplay}</td>
+            <td class="py-3 px-4 font-mono">${hwidDisplay}</td>
+            <td class="py-3 px-4 text-gray-400 truncate max-w-[140px]" title="${k.note || ''}">${k.note || '-'}</td>
+            <td class="py-3 px-4 text-right">
+              <div class="flex items-center justify-end gap-1.5 font-mono">
+                <!-- Revoke / Reactivate -->
+                <button onclick="toggleKeyRevocation('${k.key}')" title="${effectiveStatus === 'REVOKED' ? 'Reactivate Key' : 'Revoke Key'}" class="p-1.5 rounded hover:bg-cyber-red/20 text-gray-400 hover:text-cyber-red transition-all">
+                  <i class="fa-solid ${effectiveStatus === 'REVOKED' ? 'fa-rotate-left text-cyber-green' : 'fa-ban text-cyber-red'}"></i>
+                </button>
+                <!-- Extend Lifespan -->
+                <button onclick="openExtendModal('${k.key}')" title="Extend Lifespan" class="p-1.5 rounded hover:bg-cyber-red/20 text-gray-400 hover:text-cyber-amber transition-all">
+                  <i class="fa-solid fa-clock-rotate-left"></i>
+                </button>
+                <!-- Delete -->
+                <button onclick="deleteKey('${k.key}')" title="Delete Key permanently" class="p-1.5 rounded hover:bg-cyber-red/20 text-gray-400 hover:text-cyber-red transition-all">
+                  <i class="fa-regular fa-trash-can"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
+        `;
+      });
+
+      tbody.innerHTML = html;
+      document.getElementById('vault-count-visible').innerText = visibleCount;
+    }
+
+    function filterKeysTable() {
+      renderKeysTable();
+    }
+
+    // Toggle Key Revocation
+    async function toggleKeyRevocation(key) {
+      cyberAudio.playBeep(450, 'square', 0.05);
+      const k = keysState[key];
+      if (!k) return;
+
+      const newStatus = (k.status === 'REVOKED') ? 'ACTIVE' : 'REVOKED';
+      k.status = newStatus;
+
+      if (isFirebaseLive && firebaseDb) {
+        await firebaseDb.ref('keys/' + key).update({ status: newStatus });
+        firebaseDb.ref('logs').push({
+          message: `Key ${key} status altered to [${newStatus}]`,
+          timestamp: Date.now()
+        });
+      } else {
+        localStorage.setItem('cyber_mock_keys', JSON.stringify(keysState));
+        renderKeysTable();
+        renderDashboardStats();
+      }
+
+      showToast(`Key ${key} is now ${newStatus}`, newStatus === 'ACTIVE' ? 'success' : 'warning');
+      addTelemetryLog(`Key ${key} revocation toggled -> ${newStatus}`);
+    }
+
+    // Reset HWID Lock
+    async function resetKeyHwid(key) {
+      cyberAudio.playBeep(650, 'triangle', 0.05);
+      const k = keysState[key];
+      if (!k) return;
+
+      k.boundHwid = null;
+
+      if (isFirebaseLive && firebaseDb) {
+        await firebaseDb.ref('keys/' + key).update({ boundHwid: null });
+        firebaseDb.ref('logs').push({
+          message: `HWID lock reset for Key ${key}`,
+          timestamp: Date.now()
+        });
+      } else {
+        localStorage.setItem('cyber_mock_keys', JSON.stringify(keysState));
+        renderKeysTable();
+      }
+
+      showToast(`HWID Lock unlinked for key: ${key}`, 'info');
+      addTelemetryLog(`HWID unlinked for key ${key}. Client can bind new hardware.`);
+    }
+
+    // Delete Key
+    async function deleteKey(key) {
+      if (!confirm(`CONFIRM TERMINATION: Delete key ${key} from Firebase database?`)) return;
+      cyberAudio.playBeep(300, 'sawtooth', 0.08);
+
+      if (isFirebaseLive && firebaseDb) {
+        await firebaseDb.ref('keys/' + key).remove();
+        firebaseDb.ref('logs').push({
+          message: `Key ${key} erased permanently`,
+          timestamp: Date.now()
+        });
+      } else {
+        delete keysState[key];
+        localStorage.setItem('cyber_mock_keys', JSON.stringify(keysState));
+        renderKeysTable();
+        renderDashboardStats();
+      }
+
+      showToast(`Key purged from database`, 'error');
+      addTelemetryLog(`Key ${key} permanently deleted.`);
+    }
+
+    // Lifespan Extension Modal
+    function openExtendModal(key) {
+      selectedKeyForExtend = key;
+      const k = keysState[key];
+      if (!k) return;
+
+      document.getElementById('extend-modal-key').innerText = key;
+      const currentExpiry = k.expiresAt ? new Date(k.expiresAt).toLocaleDateString() : 'LIFETIME';
+      document.getElementById('extend-modal-current').innerText = `CURRENT EXPIRY: ${currentExpiry}`;
+      document.getElementById('extend-key-modal').classList.remove('hidden');
+    }
+
+    function closeExtendModal() {
+      document.getElementById('extend-key-modal').classList.add('hidden');
+      selectedKeyForExtend = null;
+    }
+
+    async function applyKeyExtension(days) {
+      if (!selectedKeyForExtend) return;
+      const key = selectedKeyForExtend;
+      const k = keysState[key];
+      if (!k) return;
+
+      const now = Date.now();
+      let newExpiresAt = null;
+
+      if (days !== 'unlimited') {
+        const base = (k.expiresAt && k.expiresAt > now) ? k.expiresAt : now;
+        newExpiresAt = base + (days * 86400000);
+      }
+
+      k.expiresAt = newExpiresAt;
+      k.status = 'ACTIVE'; // restore if expired
+
+      if (isFirebaseLive && firebaseDb) {
+        await firebaseDb.ref('keys/' + key).update({ expiresAt: newExpiresAt, status: 'ACTIVE' });
+        firebaseDb.ref('logs').push({
+          message: `Key ${key} extended by ${days} days`,
+          timestamp: Date.now()
+        });
+      } else {
+        localStorage.setItem('cyber_mock_keys', JSON.stringify(keysState));
+        renderKeysTable();
+        renderDashboardStats();
+      }
+
+      closeExtendModal();
+      showToast(`Key extended successfully!`, 'success');
+      addTelemetryLog(`Extended lifespan of key ${key} by ${days} days.`);
+    }
+
+    // Export Keys (TXT / JSON)
+    function exportKeys(format) {
+      const keysArray = Object.values(keysState);
+      if (keysArray.length === 0) {
+        showToast('Vault is empty. No keys to export.', 'warning');
+        return;
+      }
+
+      if (format === 'txt') {
+        let content = `# CYBER_KEY LICENSE VAULT EXPORT - ${new Date().toISOString()}\n`;
+        content += `# TOTAL KEYS: ${keysArray.length}\n\n`;
+        keysArray.forEach(k => {
+          const exp = k.expiresAt ? new Date(k.expiresAt).toISOString() : 'UNLIMITED';
+          content += `KEY: ${k.key} | APP: ${k.targetApp} | STATUS: ${k.status} | EXPIRES: ${exp} | HWID: ${k.boundHwid || 'NONE'}\n`;
+        });
+        downloadFile(content, 'cyber_keys_vault.txt', 'text/plain');
+      } else {
+        const jsonContent = JSON.stringify(keysState, null, 2);
+        downloadFile(jsonContent, 'cyber_keys_vault.json', 'application/json');
+      }
+      showToast(`Exported ${keysArray.length} keys in .${format.toUpperCase()} format`, 'success');
+    }
+
+    // --- Dynamic Active App Registry System ---
+    function renderAppsRegistry() {
+      const grid = document.getElementById('apps-registry-grid');
+      const dashGrid = document.getElementById('dashboard-apps-grid');
+      const emptyState = document.getElementById('apps-empty-state');
+
+      const appIds = Object.keys(appsState);
+      const now = Date.now();
+
+      if (appIds.length === 0) {
+        if (emptyState) emptyState.classList.remove('hidden');
+        if (grid) grid.innerHTML = '';
+        if (dashGrid) {
+          dashGrid.innerHTML = `
+            <div class="col-span-2 py-8 text-center text-gray-500 font-mono text-xs border border-dashed border-cyber-red/20 rounded">
+              <i class="fa-solid fa-radar text-2xl mb-2 text-cyber-red/40"></i>
+              <p>NO ACTIVE SOFTWARE SIGNALS DETECTED</p>
+              <button onclick="openSimulatePingModal()" class="mt-3 px-3 py-1.5 rounded bg-cyber-red/10 border border-cyber-red text-cyber-red text-xs hover:bg-cyber-red hover:text-white font-mono transition-all">
+                + Simulate Heartbeat Ping (Test)
+              </button>
+            </div>
+          `;
+        }
+        return;
+      }
+
+      if (emptyState) emptyState.classList.add('hidden');
+
+      let gridHtml = '';
+      let dashHtml = '';
+
+      appIds.forEach(id => {
+        const app = appsState[id];
+        // Calculate Online Status: Active if last seen within 3 minutes (180000ms)
+        const diffMs = now - (app.lastSeen || 0);
+        const isOnline = diffMs < 180000;
+        const relativeTime = getRelativeTimeString(app.lastSeen);
+
+        // App Card Full (Registry Tab)
+        gridHtml += `
+          <div class="p-5 rounded-lg border border-cyber-red/30 bg-[#0e0407]/90 shadow-glass cyber-cut flex flex-col justify-between space-y-4">
+            <div>
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                  <span class="w-3 h-3 rounded-full ${isOnline ? 'bg-cyber-green shadow-neon-green animate-pulse' : 'bg-gray-600'}"></span>
+                  <h3 class="font-orbitron font-bold text-white text-base">${app.appName || id}</h3>
+                </div>
+                <span class="font-mono text-xs px-2 py-0.5 rounded ${isOnline ? 'bg-green-950/60 text-cyber-green border border-green-500/40' : 'bg-black/60 text-gray-500 border border-gray-700'}">
+                  ${isOnline ? 'ONLINE' : 'OFFLINE'}
+                </span>
+              </div>
+              <p class="font-mono text-xs text-gray-400 mt-1">SLUG: <code class="text-cyber-red">${id}</code></p>
+            </div>
+
+            <div class="space-y-1.5 font-mono text-xs border-t border-b border-cyber-red/10 py-3 text-gray-300">
+              <div class="flex justify-between">
+                <span class="text-gray-500">CLIENT VERSION:</span>
+                <span class="text-white font-bold">${app.version || 'v1.0.0'}</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-gray-500">LAST HEARTBEAT:</span>
+                <span class="${isOnline ? 'text-cyber-green' : 'text-gray-400'}">${relativeTime}</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-gray-500">TOTAL VALIDATIONS:</span>
+                <span class="text-cyan-400 font-bold">${app.validationsCount || 0}</span>
+              </div>
+            </div>
+
+            <div class="flex items-center justify-between font-mono text-xs pt-1">
+              <button onclick="triggerQuickKeyForApp('${id}')" class="text-cyber-red hover:underline flex items-center gap-1">
+                <i class="fa-solid fa-plus text-[10px]"></i> Forge Key
+              </button>
+              <button onclick="deregisterApp('${id}')" class="text-gray-500 hover:text-cyber-red" title="Remove App from Registry">
+                <i class="fa-solid fa-trash-can text-xs"></i>
+              </button>
+            </div>
+          </div>
+        `;
+
+        // Mini Card (Dashboard Tab)
+        dashHtml += `
+          <div class="p-3 rounded bg-black/50 border border-cyber-red/20 flex items-center justify-between font-mono text-xs">
+            <div class="flex items-center gap-2.5">
+              <span class="w-2.5 h-2.5 rounded-full ${isOnline ? 'bg-cyber-green animate-pulse' : 'bg-gray-600'}"></span>
+              <div>
+                <div class="text-white font-bold">${app.appName || id}</div>
+                <div class="text-[10px] text-gray-500">${app.version || 'v1.0'} &bull; ${relativeTime}</div>
+              </div>
+            </div>
+            <span class="text-[10px] px-2 py-0.5 rounded ${isOnline ? 'bg-green-950/60 text-cyber-green border border-green-500/30' : 'bg-black text-gray-500'}">
+              ${isOnline ? 'ONLINE' : 'OFFLINE'}
+            </span>
+          </div>
+        `;
+      });
+
+      if (grid) grid.innerHTML = gridHtml;
+      if (dashGrid) dashGrid.innerHTML = dashHtml;
+    }
+
+    function triggerQuickKeyForApp(appId) {
+      switchTab('generator');
+      const dd = document.getElementById('gen-target-app');
+      if (dd) dd.value = appId;
+      updateKeyPreview();
+    }
+
+    async function deregisterApp(appId) {
+      if (!confirm(`Deregister application [${appId}] from Firebase?`)) return;
+      if (isFirebaseLive && firebaseDb) {
+        await firebaseDb.ref('apps/' + appId).remove();
+      } else {
+        delete appsState[appId];
+        localStorage.setItem('cyber_mock_apps', JSON.stringify(appsState));
+        renderAppsRegistry();
+        populateTargetAppDropdowns();
+        renderDashboardStats();
+      }
+      showToast(`App [${appId}] removed`, 'info');
+      addTelemetryLog(`Application ${appId} removed from registry.`);
+    }
+
+    // Simulate App Ping / Heartbeat
+    function openSimulatePingModal() {
+      document.getElementById('simulate-ping-modal').classList.remove('hidden');
+    }
+    function closeSimulatePingModal() {
+      document.getElementById('simulate-ping-modal').classList.add('hidden');
+    }
+
+    async function handleSendHeartbeatPing(e) {
+      e.preventDefault();
+      const appName = document.getElementById('sim-app-name').value.trim();
+      const appId = document.getElementById('sim-app-id').value.trim();
+      const version = document.getElementById('sim-app-ver').value.trim();
+      const status = document.getElementById('sim-app-status').value;
+
+      const appData = {
+        appName: appName,
+        appId: appId,
+        version: version,
+        lastSeen: Date.now(),
+        status: status,
+        validationsCount: (appsState[appId]?.validationsCount || 0) + 1
+      };
+
+      if (isFirebaseLive && firebaseDb) {
+        await firebaseDb.ref('apps/' + appId).set(appData);
+        firebaseDb.ref('logs').push({
+          message: `Heartbeat received from client [${appName}] (${version})`,
+          timestamp: Date.now()
+        });
+      } else {
+        appsState[appId] = appData;
+        localStorage.setItem('cyber_mock_apps', JSON.stringify(appsState));
+        renderAppsRegistry();
+        populateTargetAppDropdowns();
+        renderDashboardStats();
+      }
+
+      closeSimulatePingModal();
+      cyberAudio.playAccessGranted();
+      showToast(`Heartbeat broadcasted for [${appName}]`, 'success');
+      addTelemetryLog(`External heartbeat detected: ${appName} (${version}) is ONLINE.`);
+    }
+
+    // --- Dashboard Metrics Calculation ---
+    function renderDashboardStats() {
+      const keysArray = Object.values(keysState);
+      const totalKeys = keysArray.length;
+      let activeKeys = 0;
+      let revokedKeys = 0;
+      let boundKeys = 0;
+      let unboundKeys = 0;
+
+      const now = Date.now();
+
+      keysArray.forEach(k => {
+        let isExpired = k.expiresAt && now > k.expiresAt;
+        if (k.status === 'REVOKED') {
+          revokedKeys++;
+        } else if (isExpired) {
+          // expired
+        } else {
+          activeKeys++;
+        }
+
+        if (k.boundHwid) {
+          boundKeys++;
+        } else {
+          unboundKeys++;
+        }
+      });
+
+      // Apps stats
+      const appIds = Object.keys(appsState);
+      let onlineApps = 0;
+      appIds.forEach(id => {
+        if (now - (appsState[id].lastSeen || 0) < 180000) {
+          onlineApps++;
+        }
+      });
+
+      document.getElementById('stat-total-keys').innerText = totalKeys;
+      document.getElementById('stat-active-keys').innerText = activeKeys;
+      document.getElementById('stat-revoked-keys').innerText = revokedKeys;
+
+      document.getElementById('stat-online-apps').innerText = onlineApps;
+      document.getElementById('stat-total-apps').innerText = appIds.length;
+      const onlineBadge = document.getElementById('stat-online-badge');
+      if (onlineBadge) {
+        onlineBadge.innerText = onlineApps > 0 ? `${onlineApps} ONLINE` : 'STANDBY';
+        onlineBadge.className = onlineApps > 0 ? 'text-cyber-green' : 'text-gray-400';
+      }
+
+      document.getElementById('stat-bound-keys').innerText = boundKeys;
+      document.getElementById('stat-unbound-keys').innerText = unboundKeys;
+
+      const logCount = document.querySelectorAll('#telemetry-log-stream > div').length;
+      document.getElementById('stat-total-logs').innerText = Math.max(logCount, 24);
+    }
+
+    // --- Integration Docs & Code Snippet Generator ---
+    function switchCodeLang(lang) {
+      cyberAudio.playBeep(650, 'sine', 0.03);
+      currentCodeLanguage = lang;
+
+      // Update Tabs
+      document.querySelectorAll('.code-tab-btn').forEach(btn => {
+        btn.className = "code-tab-btn py-3 px-4 border-b-2 border-transparent text-gray-400 hover:text-white flex items-center gap-2";
+      });
+      const activeBtn = document.getElementById('code-btn-' + lang);
+      if (activeBtn) {
+        activeBtn.className = "code-tab-btn py-3 px-4 border-b-2 border-cyber-red text-cyber-red font-bold flex items-center gap-2";
+      }
+
+      // Hide all panes
+      document.querySelectorAll('.code-pane').forEach(p => p.classList.add('hidden'));
+      const activePane = document.getElementById('code-pane-' + lang);
+      if (activePane) activePane.classList.remove('hidden');
+
+      renderCodeSnippets();
+    }
+
+    function renderCodeSnippets() {
+      const dbUrl = (firebaseConfig.databaseURL || "https://your-app-rtdb.firebaseio.com").replace(/\/$/, "");
+      const selectedAppId = document.getElementById('docs-code-app-select')?.value || Object.keys(appsState)[0] || "cyberstrike-v3";
+      const selectedAppName = appsState[selectedAppId]?.appName || selectedAppId;
+
+      document.getElementById('docs-code-dburl').value = dbUrl;
+      document.getElementById('rest-url-get').innerText = `${dbUrl}/keys/{LICENSE_KEY}.json`;
+      document.getElementById('rest-url-patch').innerText = `${dbUrl}/keys/{LICENSE_KEY}.json`;
+      document.getElementById('rest-url-app').innerText = `${dbUrl}/apps/${selectedAppId}.json`;
+
+      // 1. C# Snippet (.NET Framework / .NET Core)
+      const csharpCode = `using System;
+using System.Net.Http;
+using System.Text;
+using System.Threading.Tasks;
+using System.Text.Json;
+using System.Security.Cryptography;
+
+namespace CyberLicenseClient
+{
+    public class CyberAuthService
+    {
+        private static readonly string FirebaseBaseUrl = "${dbUrl}";
+        private static readonly string TargetAppId = "${selectedAppId}";
+        private static readonly string ClientVersion = "v2.5.0";
+        private static readonly HttpClient client = new HttpClient();
+
+        // 1. Generate unique Machine Hardware ID (HWID)
+        public static string GetHardwareId()
+        {
+            string raw = Environment.MachineName + Environment.UserName + Environment.ProcessorCount;
+            using (SHA256 sha = SHA256.Create())
+            {
+                byte[] hash = sha.ComputeHash(Encoding.UTF8.GetBytes(raw));
+                return BitConverter.ToString(hash).Replace("-", "").Substring(0, 16);
+            }
+        }
+
+        // 2. Authenticate License Key against Firebase Realtime Database
+        public static async Task<bool> ValidateLicenseAsync(string licenseKey)
+        {
+            string url = $"{FirebaseBaseUrl}/keys/{licenseKey}.json";
+            HttpResponseMessage response = await client.GetAsync(url);
+            
+            if (!response.IsSuccessStatusCode) return false;
+            string json = await response.Content.ReadAsStringAsync();
+            if (string.IsNullOrEmpty(json) || json == "null") return false;
+
+            using JsonDocument doc = JsonDocument.Parse(json);
+            JsonElement root = doc.RootElement;
+
+            // Check Status
+            string status = root.GetProperty("status").GetString();
+            if (status != "ACTIVE") {
+                Console.WriteLine($"[DENIED] Key is {status}");
+                return false;
+            }
+
+            // Check Target App Matching
+            string appTarget = root.GetProperty("targetAppId").GetString();
+            if (!string.Equals(appTarget, TargetAppId, StringComparison.OrdinalIgnoreCase)) {
+                Console.WriteLine("[DENIED] Key not valid for this application");
+                return false;
+            }
+
+            // Check Expiration
+            if (root.TryGetProperty("expiresAt", out JsonElement expElem) && expElem.ValueKind == JsonValueKind.Number) {
+                long expiresAt = expElem.GetInt64();
+                long now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+                if (now > expiresAt) {
+                    Console.WriteLine("[DENIED] License has expired");
+                    return false;
+                }
+            }
+
+            // Check HWID Lock
+            string clientHwid = GetHardwareId();
+            bool hwidLock = root.GetProperty("hwidLockEnabled").GetBoolean();
+
+            if (hwidLock) {
+                if (root.TryGetProperty("boundHwid", out JsonElement hwidElem) && hwidElem.ValueKind == JsonValueKind.String) {
+                    string boundHwid = hwidElem.GetString();
+                    if (!string.IsNullOrEmpty(boundHwid) && boundHwid != clientHwid) {
+                        Console.WriteLine("[DENIED] HWID mismatch. Key is locked to another machine.");
+                        return false;
+                    }
+                } else {
+                    // First activation: Lock HWID to this machine
+                    await BindHardwareIdAsync(licenseKey, clientHwid);
+                }
+            }
+
+            // Send Heartbeat ping to /apps
+            await SendHeartbeatPingAsync();
+            return true;
+        }
+
+        // 3. Bind HWID on First Activation (PATCH)
+        private static async Task BindHardwareIdAsync(string licenseKey, string hwid)
+        {
+            string patchUrl = $"{FirebaseBaseUrl}/keys/{licenseKey}.json";
+            string payload = $"{{\\"boundHwid\\": \\"{hwid}\\", \\"currentUses\\": 1}}";
+            StringContent content = new StringContent(payload, Encoding.UTF8, "application/json");
+            await client.PatchAsync(patchUrl, content);
+        }
+
+        // 4. Send Heartbeat to keep app marked ONLINE
+        public static async Task SendHeartbeatPingAsync()
+        {
+            string putUrl = $"{FirebaseBaseUrl}/apps/{TargetAppId}.json";
+            long now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+            string payload = $"{{\\"appName\\": \\"${selectedAppName}\\", \\"appId\\": \\"{TargetAppId}\\", \\"version\\": \\"{ClientVersion}\\", \\"lastSeen\\": {now}, \\"status\\": \\"ONLINE\\"}}";
+            StringContent content = new StringContent(payload, Encoding.UTF8, "application/json");
+            await client.PutAsync(putUrl, content);
+        }
+    }
+}`;
+      document.getElementById('snippet-csharp').innerText = csharpCode;
+
+      // 2. Python Snippet (Requests)
+      const pythonCode = `import requests
+import hashlib
+import platform
+import time
+import uuid
+import threading
+
+FIREBASE_URL = "${dbUrl}"
+TARGET_APP_ID = "${selectedAppId}"
+TARGET_APP_NAME = "${selectedAppName}"
+CLIENT_VERSION = "v2.5.0"
+
+def get_hwid():
+    """Generates a stable machine hardware fingerprint."""
+    raw = f"{platform.node()}-{platform.machine()}-{uuid.getnode()}"
+    return hashlib.sha256(raw.encode()).hexdigest()[:16].upper()
+
+def send_heartbeat():
+    """Sends background pulse to keep app registered ONLINE in Firebase."""
+    url = f"{FIREBASE_URL}/apps/{TARGET_APP_ID}.json"
+    payload = {
+        "appName": TARGET_APP_NAME,
+        "appId": TARGET_APP_ID,
+        "version": CLIENT_VERSION,
+        "lastSeen": int(time.time() * 1000),
+        "status": "ONLINE"
+    }
+    try:
+        requests.put(url, json=payload, timeout=5)
+    except Exception as e:
+        pass
+
+def start_heartbeat_loop():
+    def loop():
+        while True:
+            send_heartbeat()
+            time.sleep(60) # Ping every 60s
+    t = threading.Thread(target=loop, daemon=True)
+    t.start()
+
+def validate_license(key):
+    """Validates key, checks expiration, and enforces HWID lock."""
+    url = f"{FIREBASE_URL}/keys/{key}.json"
+    res = requests.get(url, timeout=5)
+    
+    if res.status_code != 200 or not res.json():
+        print("[!] Invalid License Key.")
+        return False
+        
+    data = res.json()
+    
+    # 1. Check Status
+    if data.get("status") != "ACTIVE":
+        print(f"[!] License Status is {data.get('status')}")
+        return False
+        
+    # 2. Check Target App
+    if data.get("targetAppId") != TARGET_APP_ID:
+        print("[!] License does not belong to this application.")
+        return False
+        
+    # 3. Check Expiry
+    expires_at = data.get("expiresAt")
+    if expires_at and (time.time() * 1000) > expires_at:
+        print("[!] License has expired.")
+        return False
+        
+    # 4. Check HWID Lock
+    current_hwid = get_hwid()
+    if data.get("hwidLockEnabled"):
+        bound_hwid = data.get("boundHwid")
+        if bound_hwid and bound_hwid != current_hwid:
+            print("[!] HWID Lock Error: Key locked to another machine.")
+            return False
+        elif not bound_hwid:
+            # Bind to this machine on first use
+            requests.patch(url, json={"boundHwid": current_hwid, "currentUses": 1})
+            print("[+] License bound to this hardware successfully.")
+
+    # Broadcast heartbeat
+    start_heartbeat_loop()
+    print("[+] ACCESS GRANTED. Welcome Operator.")
+    return True
+
+if __name__ == "__main__":
+    key_input = input("Enter License Key: ").strip()
+    if validate_license(key_input):
+        print("Running authorized application...")
+        # Your main software logic here
+`;
+      document.getElementById('snippet-python').innerText = pythonCode;
+
+      // 3. PowerShell / Batch Snippet
+      const batchCode = `# PowerShell 5.1+ / Core License Validation & Heartbeat
+$FirebaseUrl = "${dbUrl}"
+$TargetAppId = "${selectedAppId}"
+$AppName     = "${selectedAppName}"
+$LicenseKey  = Read-Host "ENTER LICENSE KEY"
+
+# 1. Compute local HWID hash
+$rawHWID = "$($env:COMPUTERNAME)-$($env:PROCESSOR_IDENTIFIER)"
+$hwid = [BitConverter]::ToString([System.Security.Cryptography.SHA256]::Create().ComputeHash([System.Text.Encoding]::UTF8.GetBytes($rawHWID))).Replace("-","").Substring(0,16)
+
+Write-Host "Verifying key with Firebase Realtime Database..." -ForegroundColor Red
+
+# 2. Query Key REST endpoint
+$keyUrl = "$FirebaseUrl/keys/$LicenseKey.json"
+try {
+    $keyData = Invoke-RestMethod -Uri $keyUrl -Method GET -TimeoutSec 5
+    if ($null -eq $keyData) {
+        Write-Host "[-] ACCESS DENIED: Key not found" -ForegroundColor DarkRed
+        exit 1
+    }
+
+    if ($keyData.status -ne "ACTIVE") {
+        Write-Host "[-] ACCESS DENIED: Key status is $($keyData.status)" -ForegroundColor DarkRed
+        exit 1
+    }
+
+    # HWID validation
+    if ($keyData.hwidLockEnabled) {
+        if ($null -ne $keyData.boundHwid -and $keyData.boundHwid -ne $hwid) {
+            Write-Host "[-] ACCESS DENIED: Hardware mismatch ($($keyData.boundHwid))" -ForegroundColor DarkRed
+            exit 1
+        } elseif ($null -eq $keyData.boundHwid) {
+            # Bind HWID
+            Invoke-RestMethod -Uri $keyUrl -Method PATCH -Body (ConvertTo-Json @{ boundHwid = $hwid; currentUses = 1 }) -ContentType "application/json" | Out-Null
+            Write-Host "[+] Hardware locked to this node." -ForegroundColor Green
+        }
+    }
+
+    # 3. Heartbeat registration
+    $appUrl = "$FirebaseUrl/apps/$TargetAppId.json"
+    $nowEpoch = [DateTimeOffset]::UtcNow.ToUnixTimeMilliseconds()
+    $appPayload = @{
+        appName = $AppName
+        appId   = $TargetAppId
+        version = "v1.0-cli"
+        lastSeen = $nowEpoch
+        status  = "ONLINE"
+    } | ConvertTo-Json
+
+    Invoke-RestMethod -Uri $appUrl -Method PUT -Body $appPayload -ContentType "application/json" | Out-Null
+    Write-Host "[+] ACCESS GRANTED. Launching core..." -ForegroundColor Green
+
+} catch {
+    Write-Host "[-] Network or validation error: $_" -ForegroundColor Red
+    exit 1
+}`;
+      document.getElementById('snippet-batch').innerText = batchCode;
+    }
+
+    function copyCurrentCodeSnippet() {
+      cyberAudio.playBeep(900, 'sine', 0.04);
+      let text = "";
+      if (currentCodeLanguage === 'csharp') {
+        text = document.getElementById('snippet-csharp').innerText;
+      } else if (currentCodeLanguage === 'python') {
+        text = document.getElementById('snippet-python').innerText;
+      } else if (currentCodeLanguage === 'batch') {
+        text = document.getElementById('snippet-batch').innerText;
+      }
+
+      if (text) {
+        copyToClipboard(text);
+        const label = document.getElementById('copy-code-label');
+        label.innerText = 'COPIED!';
+        setTimeout(() => label.innerText = 'COPY CODE', 2000);
+      }
+    }
+
+    // --- Firebase Config Modal Management ---
+    function openConfigModal() {
+      cyberAudio.playBeep(600, 'sine', 0.04);
+      document.getElementById('cfg-apiKey').value = firebaseConfig.apiKey || '';
+      document.getElementById('cfg-databaseURL').value = firebaseConfig.databaseURL || '';
+      document.getElementById('cfg-projectId').value = firebaseConfig.projectId || '';
+      document.getElementById('cfg-authDomain').value = firebaseConfig.authDomain || '';
+      document.getElementById('cfg-storageBucket').value = firebaseConfig.storageBucket || '';
+      document.getElementById('cfg-appId').value = firebaseConfig.appId || '';
+      document.getElementById('config-modal').classList.remove('hidden');
+    }
+
+    function closeConfigModal() {
+      document.getElementById('config-modal').classList.add('hidden');
+    }
+
+    function saveFirebaseConfig(e) {
+      e.preventDefault();
+      const cfg = {
+        apiKey: document.getElementById('cfg-apiKey').value.trim(),
+        databaseURL: document.getElementById('cfg-databaseURL').value.trim().replace(/\/$/, ""),
+        projectId: document.getElementById('cfg-projectId').value.trim(),
+        authDomain: document.getElementById('cfg-authDomain').value.trim(),
+        storageBucket: document.getElementById('cfg-storageBucket').value.trim(),
+        appId: document.getElementById('cfg-appId').value.trim()
+      };
+
+      localStorage.setItem('cyber_firebase_config', JSON.stringify(cfg));
+      firebaseConfig = cfg;
+      closeConfigModal();
+
+      showToast('Firebase Config saved. Re-initializing...', 'info');
+      addTelemetryLog(`Firebase configuration updated: ${cfg.databaseURL}`);
+      setTimeout(() => location.reload(), 600);
+    }
+
+    function loadDefaultMockMode() {
+      localStorage.removeItem('cyber_firebase_config');
+      firebaseConfig = defaultFirebaseConfig;
+      closeConfigModal();
+      showToast('Simulation engine activated', 'info');
+      activateSimulationMode();
+    }
+
+    // --- Utilities: Clipboard, Toast, Audio, Scanlines, Clock ---
+    function copyToClipboard(text) {
+      cyberAudio.playBeep(850, 'sine', 0.04);
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text);
+      } else {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+      }
+      showToast('COPIED TO CLIPBOARD', 'success');
+    }
+
+    function downloadFile(content, fileName, contentType) {
+      const a = document.createElement("a");
+      const file = new Blob([content], { type: contentType });
+      a.href = URL.createObjectURL(file);
+      a.download = fileName;
+      a.click();
+      URL.revokeObjectURL(a.href);
+    }
+
+    function showToast(msg, type = 'info') {
+      const container = document.getElementById('toast-container');
+      if (!container) return;
+
+      const toast = document.createElement('div');
+      let border = 'border-cyber-red/60 text-white';
+      let icon = 'fa-solid fa-bell text-cyber-red';
+      let bg = 'bg-[#15040a]/95';
+
+      if (type === 'success') {
+        border = 'border-cyber-green/60 text-white';
+        icon = 'fa-solid fa-circle-check text-cyber-green';
+      } else if (type === 'warning') {
+        border = 'border-amber-500/60 text-white';
+        icon = 'fa-solid fa-triangle-exclamation text-amber-400';
+      } else if (type === 'error') {
+        border = 'border-cyber-red text-white';
+        icon = 'fa-solid fa-shield-virus text-cyber-red';
+      }
+
+      toast.className = `p-3 rounded border ${border} ${bg} backdrop-blur-md shadow-neon-red font-mono text-xs flex items-center gap-2.5 transition-all duration-300 transform translate-y-4 opacity-0 pointer-events-auto max-w-sm`;
+      toast.innerHTML = `<i class="${icon}"></i> <span>${msg}</span>`;
+
+      container.appendChild(toast);
+      setTimeout(() => {
+        toast.classList.remove('translate-y-4', 'opacity-0');
+      }, 20);
+
+      setTimeout(() => {
+        toast.classList.add('opacity-0', 'translate-x-4');
+        setTimeout(() => toast.remove(), 350);
+      }, 3500);
+    }
+
+    function addTelemetryLog(msg, timestamp = null) {
+      const stream = document.getElementById('telemetry-log-stream');
+      if (!stream) return;
+      const timeStr = new Date(timestamp || Date.now()).toLocaleTimeString();
+      const div = document.createElement('div');
+      div.className = "text-gray-300 font-mono text-[11px] leading-relaxed";
+      div.innerHTML = `<span class="text-cyber-red">[${timeStr}]</span> &gt; ${msg}`;
+      stream.insertBefore(div, stream.firstChild);
+
+      // Keep max 40 items
+      while (stream.children.length > 40) {
+        stream.removeChild(stream.lastChild);
+      }
+    }
+
+    function clearActivityLogs() {
+      const stream = document.getElementById('telemetry-log-stream');
+      if (stream) stream.innerHTML = '<div class="text-gray-500 font-mono text-[11px]">[STREAM CLEARED] Listening for incoming events...</div>';
+    }
+
+    function toggleAudio() {
+      const isMuted = cyberAudio.toggleMute();
+      const icon = document.getElementById('audio-icon');
+      if (isMuted) {
+        icon.className = 'fa-solid fa-volume-xmark text-gray-500';
+        showToast('Cyber Audio Muted', 'info');
+      } else {
+        icon.className = 'fa-solid fa-volume-high text-cyber-red';
+        cyberAudio.playBeep(800, 'sine', 0.05);
+        showToast('Cyber Audio Activated', 'info');
+      }
+    }
+
+    function toggleScanlines() {
+      const layer = document.getElementById('scanlines-layer');
+      if (layer) {
+        layer.classList.toggle('hidden');
+        showToast(layer.classList.contains('hidden') ? 'Scanlines Disabled' : 'Scanlines Enabled', 'info');
+      }
+    }
+
+    function getRelativeTimeString(timeMs) {
+      if (!timeMs) return 'Never';
+      const diffSec = Math.floor((Date.now() - timeMs) / 1000);
+      if (diffSec < 20) return 'Just now';
+      if (diffSec < 60) return `${diffSec}s ago`;
+      if (diffSec < 3600) return `${Math.floor(diffSec / 60)}m ago`;
+      if (diffSec < 86400) return `${Math.floor(diffSec / 3600)}h ago`;
+      return `${Math.floor(diffSec / 86400)}d ago`;
+    }
+
+    // System Clock
+    function updateSystemClock() {
+      const el = document.getElementById('system-clock');
+      if (el) {
+        const now = new Date();
+        el.innerText = now.toUTCString().replace("GMT", "UTC");
+      }
+    }
+    setInterval(updateSystemClock, 1000);
+
+    // Simulated Latency ping update
+    setInterval(() => {
+      const pingEl = document.getElementById('ping-latency');
+      if (pingEl) {
+        const ms = isFirebaseLive ? Math.floor(Math.random() * 25 + 28) : '< 5ms (Local)';
+        pingEl.innerText = typeof ms === 'number' ? `${ms}ms` : ms;
+      }
+    }, 4000);
+
+    // --- Onload Initialization ---
+    window.addEventListener('DOMContentLoaded', () => {
+      // Check auth state
+      if (sessionStorage.getItem('cyber_authenticated') === 'true') {
+        const lockscreen = document.getElementById('lockscreen');
+        if (lockscreen) lockscreen.classList.add('hidden');
+      }
+
+      initDatabase();
+      updateSystemClock();
+      updateKeyPreview();
+      initLiquidChrome();
+    });
+  </script>
+</body>
+</html>
