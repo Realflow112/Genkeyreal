@@ -1011,9 +1011,47 @@
               <span id="copy-code-label">COPY CODE</span>
             </button>
 
-            <!-- C# Code -->
-            <div id="code-pane-csharp" class="code-pane">
-              <pre class="bg-black/80 p-4 rounded border border-cyber-red/20 font-mono text-xs text-gray-200 overflow-x-auto"><code id="snippet-csharp"></code></pre>
+            <!-- C# Code (KeyAuth Style) -->
+            <div id="code-pane-csharp" class="code-pane space-y-4">
+              
+              <!-- Quick 2-Line Usage Box (Just like KeyAuth) -->
+              <div class="p-4 rounded-lg bg-black/80 border border-cyber-green/50 shadow-neon-green space-y-2">
+                <div class="flex items-center justify-between pb-2 border-b border-cyber-green/20">
+                  <span class="font-orbitron text-xs font-bold text-cyber-green flex items-center gap-2">
+                    <i class="fa-solid fa-bolt"></i> วิธีเรียกใช้งานในโปรแกรมของคุณ (ง่ายเหมือน KeyAuth แค่ 2 บรรทัด!)
+                  </span>
+                  <button type="button" onclick="copyKeyAuthSnippet()" class="px-2 py-0.5 rounded bg-cyber-green/20 text-cyber-green text-[11px] font-mono hover:bg-cyber-green hover:text-black transition-all">
+                    <i class="fa-solid fa-copy"></i> COPY USAGE
+                  </button>
+                </div>
+                <pre class="font-mono text-xs text-gray-200 p-2 bg-[#0a0507] rounded border border-cyber-green/20 overflow-x-auto"><code id="keyauth-call-snippet">// 1. เรียกคำสั่งนี้บรรทัดเดียวในปุ่ม Login หรือ Form_Load
+if (CyberAuth.License(txtKey.Text))
+{
+    // ผ่าน! คีย์ถูกต้อง + ล็อค HWID + ส่ง Heartbeat ให้อัตโนมัติ
+    MessageBox.Show("เข้าสู่ระบบสำเร็จ! ยินดีต้อนรับ");
+    new MainForm().Show();
+    this.Hide();
+}
+else
+{
+    // ไม่ผ่าน (คีย์ผิด / หมดอายุ / ล็อคกับเครื่องอื่น)
+    MessageBox.Show(CyberAuth.Response.Message, "ERROR");
+}</code></pre>
+              </div>
+
+              <!-- Download CyberAuth.cs Button Header -->
+              <div class="flex flex-wrap items-center justify-between gap-2 p-3 rounded bg-[#16060c] border border-cyber-red/30 font-mono text-xs">
+                <div>
+                  <span class="text-white font-bold">// ไฟล์ไลบรารี่ CyberAuth.cs</span>
+                  <span class="text-gray-400 block text-[11px]">ดาวน์โหลดแล้วนำไปลากใส่ลงในโปรเจกต์ Visual Studio ของคุณครั้งเดียวจบ</span>
+                </div>
+                <button type="button" onclick="downloadCyberAuthCs()" class="px-3 py-2 rounded bg-cyber-red hover:bg-[#ff1a53] text-white font-orbitron font-bold text-xs flex items-center gap-1.5 shadow-neon-red transition-all">
+                  <i class="fa-solid fa-download"></i> ดาวน์โหลด CyberAuth.cs
+                </button>
+              </div>
+
+              <!-- Full Library Code View -->
+              <pre class="bg-black/80 p-4 rounded border border-cyber-red/20 font-mono text-xs text-gray-300 max-h-96 overflow-y-auto"><code id="snippet-csharp"></code></pre>
             </div>
 
             <!-- Python Code -->
@@ -3155,27 +3193,173 @@ git push -u origin main</pre>
       document.getElementById('docs-code-dburl').value = dbUrl;
       document.getElementById('rest-url-get').innerText = `${dbUrl}/keys/{LICENSE_KEY}.json`;
       document.getElementById('rest-url-patch').innerText = `${dbUrl}/keys/{LICENSE_KEY}.json`;
-      document.getElementById('rest-url-app').innerText = `${dbUrl}/apps/${selectedAppId}.json`;
-
-      // 1. C# Snippet (.NET Framework / .NET Core)
+      document.getElementById('rest-url-app').innerText = `${dbUrl}/apps/${selectedAppId}.json`;      // 1. C# Snippet (KeyAuth-Style Wrapper)
       const csharpCode = `using System;
 using System.Net.Http;
 using System.Text;
-using System.Threading.Tasks;
 using System.Text.Json;
 using System.Security.Cryptography;
 
-namespace CyberLicenseClient
+/// <summary>
+/// CYBER_KEY CLIENT SDK (KeyAuth-Style Easy Wrapper)
+/// ใช้งานง่ายเหมือน KeyAuth: เรียก CyberAuth.License("คีย์ของคุณ") บรรทัดเดียวจบ!
+/// </summary>
+public static class CyberAuth
 {
-    public class CyberAuthService
-    {
-        private static readonly string FirebaseBaseUrl = "${dbUrl}";
-        private static readonly string TargetAppId = "${selectedAppId}";
-        private static readonly string ClientVersion = "v2.5.0";
-        private static readonly HttpClient client = new HttpClient();
+    // ==========================================
+    // การตั้งค่าแอปพลิเคชัน (AUTO-CONFIGURED)
+    // ==========================================
+    public static string AppId = "${selectedAppId}";
+    public static string AppName = "${selectedAppName}";
+    public static string FirebaseUrl = "${dbUrl}";
+    public static string Version = "v1.0.0";
 
-        // 1. Generate unique Machine Hardware ID (HWID)
-        public static string GetHardwareId()
+    private static readonly HttpClient http = new HttpClient();
+
+    public static class Response
+    {
+        public static bool Success = false;
+        public static string Message = "";
+        public static string BoundHwid = "";
+        public static string ExpiryDate = "";
+    }
+
+    /// <summary>
+    /// สั่งตรวจสอบ License Key เหมือน KeyAuthApp.license(key)
+    /// คืนค่า true ถ้าผ่าน และ false ถ้าไม่ผ่าน
+    /// </summary>
+    public static bool License(string key)
+    {
+        try { return LicenseAsync(key).GetAwaiter().GetResult(); }
+        catch (Exception ex) { Response.Success = false; Response.Message = ex.Message; return false; }
+    }
+
+    /// <summary>
+    /// แบบ Asynchronous สำหรับ UI (await CyberAuth.LicenseAsync(key))
+    /// </summary>
+    public static async System.Threading.Tasks.Task<bool> LicenseAsync(string key)
+    {
+        if (string.IsNullOrWhiteSpace(key))
+        {
+            Response.Success = false;
+            Response.Message = "กรุณากรอกคีย์ใบอนุญาต";
+            return false;
+        }
+
+        key = key.Trim();
+        string cleanDbUrl = FirebaseUrl.TrimEnd('/');
+        string url = $"{cleanDbUrl}/keys/{key}.json";
+
+        try
+        {
+            HttpResponseMessage res = await http.GetAsync(url);
+            if (!res.IsSuccessStatusCode)
+            {
+                Response.Success = false;
+                Response.Message = "เชื่อมต่อล้มเหลว รหัส: " + res.StatusCode;
+                return false;
+            }
+
+            string json = await res.Content.ReadAsStringAsync();
+            if (string.IsNullOrWhiteSpace(json) || json == "null")
+            {
+                Response.Success = false;
+                Response.Message = "ไม่พบคีย์นี้ในระบบ!";
+                return false;
+            }
+
+            using JsonDocument doc = JsonDocument.Parse(json);
+            JsonElement root = doc.RootElement;
+
+            // 1. ตรวจสอบสถานะ (Status)
+            string status = root.TryGetProperty("status", out var sProp) ? sProp.GetString() : "REVOKED";
+            if (status != "ACTIVE")
+            {
+                Response.Success = false;
+                Response.Message = "คีย์ถูกระงับ (Status: " + status + ")";
+                return false;
+            }
+
+            // 2. ตรวจสอบวันหมดอายุ (Expiry)
+            if (root.TryGetProperty("expiresAt", out var expProp) && expProp.ValueKind == JsonValueKind.Number)
+            {
+                long exp = expProp.GetInt64();
+                long now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+                if (now > exp)
+                {
+                    Response.Success = false;
+                    Response.Message = "คีย์หมดอายุแล้ว!";
+                    return false;
+                }
+                Response.ExpiryDate = DateTimeOffset.FromUnixTimeMilliseconds(exp).LocalDateTime.ToString("dd/MM/yyyy HH:mm");
+            }
+            else { Response.ExpiryDate = "Lifetime / ตลอดชีพ"; }
+
+            // 3. ตรวจสอบและล็อค HWID (Hardware ID Lock)
+            string localHwid = GetHwid();
+            bool hwidLock = !root.TryGetProperty("hwidLockEnabled", out var hwidLockProp) || hwidLockProp.GetBoolean();
+
+            if (hwidLock)
+            {
+                if (root.TryGetProperty("boundHwid", out var boundProp) && boundProp.ValueKind == JsonValueKind.String)
+                {
+                    string bound = boundProp.GetString();
+                    if (!string.IsNullOrEmpty(bound) && !string.Equals(bound, localHwid, StringComparison.OrdinalIgnoreCase))
+                    {
+                        Response.Success = false;
+                        Response.Message = "HWID Mismatch: คีย์นี้ถูกล็อคกับเครื่องอื่นอยู่!";
+                        return false;
+                    }
+                    Response.BoundHwid = bound;
+                }
+                else
+                {
+                    // ผูก HWID อัตโนมัติครั้งแรก
+                    await BindHwidAsync(cleanDbUrl, key, localHwid);
+                    Response.BoundHwid = localHwid;
+                }
+            }
+
+            // 4. ส่ง Heartbeat ให้ขึ้นสถานะ ONLINE บนหน้าเว็บ
+            _ = PingHeartbeatAsync(cleanDbUrl);
+
+            Response.Success = true;
+            Response.Message = "ยืนยันคีย์สำเร็จ ยินดีต้อนรับ!";
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Response.Success = false;
+            Response.Message = "เกิดข้อผิดพลาด: " + ex.Message;
+            return false;
+        }
+    }
+
+    public static async System.Threading.Tasks.Task PingHeartbeatAsync(string cleanDbUrl = null)
+    {
+        try
+        {
+            cleanDbUrl = (cleanDbUrl ?? FirebaseUrl).TrimEnd('/');
+            string url = $"{cleanDbUrl}/apps/{AppId}.json";
+            long now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+            string body = $"{{\"appName\":\"${selectedAppName}\",\"appId\":\"${selectedAppId}\",\"version\":\"${Version}\",\"lastSeen\":{now},\"status\":\"ONLINE\"}}";
+            await http.PutAsync(url, new StringContent(body, Encoding.UTF8, "application/json"));
+        } catch { }
+    }
+
+    private static async System.Threading.Tasks.Task BindHwidAsync(string cleanDbUrl, string key, string hwid)
+    {
+        try
+        {
+            string url = $"{cleanDbUrl}/keys/{key}.json";
+            string body = $"{{\"boundHwid\":\"{hwid}\",\"currentUses\":1}}";
+            await http.PatchAsync(url, new StringContent(body, Encoding.UTF8, "application/json"));
+        } catch { }
+    }
+
+    public static string GetHwid()
+    {
+        try
         {
             string raw = Environment.MachineName + Environment.UserName + Environment.ProcessorCount;
             using (SHA256 sha = SHA256.Create())
@@ -3184,84 +3368,7 @@ namespace CyberLicenseClient
                 return BitConverter.ToString(hash).Replace("-", "").Substring(0, 16);
             }
         }
-
-        // 2. Authenticate License Key against Firebase Realtime Database
-        public static async Task<bool> ValidateLicenseAsync(string licenseKey)
-        {
-            string url = $"{FirebaseBaseUrl}/keys/{licenseKey}.json";
-            HttpResponseMessage response = await client.GetAsync(url);
-            
-            if (!response.IsSuccessStatusCode) return false;
-            string json = await response.Content.ReadAsStringAsync();
-            if (string.IsNullOrEmpty(json) || json == "null") return false;
-
-            using JsonDocument doc = JsonDocument.Parse(json);
-            JsonElement root = doc.RootElement;
-
-            // Check Status
-            string status = root.GetProperty("status").GetString();
-            if (status != "ACTIVE") {
-                Console.WriteLine($"[DENIED] Key is {status}");
-                return false;
-            }
-
-            // Check Target App Matching
-            string appTarget = root.GetProperty("targetAppId").GetString();
-            if (!string.Equals(appTarget, TargetAppId, StringComparison.OrdinalIgnoreCase)) {
-                Console.WriteLine("[DENIED] Key not valid for this application");
-                return false;
-            }
-
-            // Check Expiration
-            if (root.TryGetProperty("expiresAt", out JsonElement expElem) && expElem.ValueKind == JsonValueKind.Number) {
-                long expiresAt = expElem.GetInt64();
-                long now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-                if (now > expiresAt) {
-                    Console.WriteLine("[DENIED] License has expired");
-                    return false;
-                }
-            }
-
-            // Check HWID Lock
-            string clientHwid = GetHardwareId();
-            bool hwidLock = root.GetProperty("hwidLockEnabled").GetBoolean();
-
-            if (hwidLock) {
-                if (root.TryGetProperty("boundHwid", out JsonElement hwidElem) && hwidElem.ValueKind == JsonValueKind.String) {
-                    string boundHwid = hwidElem.GetString();
-                    if (!string.IsNullOrEmpty(boundHwid) && boundHwid != clientHwid) {
-                        Console.WriteLine("[DENIED] HWID mismatch. Key is locked to another machine.");
-                        return false;
-                    }
-                } else {
-                    // First activation: Lock HWID to this machine
-                    await BindHardwareIdAsync(licenseKey, clientHwid);
-                }
-            }
-
-            // Send Heartbeat ping to /apps
-            await SendHeartbeatPingAsync();
-            return true;
-        }
-
-        // 3. Bind HWID on First Activation (PATCH)
-        private static async Task BindHardwareIdAsync(string licenseKey, string hwid)
-        {
-            string patchUrl = $"{FirebaseBaseUrl}/keys/{licenseKey}.json";
-            string payload = $"{{\\"boundHwid\\": \\"{hwid}\\", \\"currentUses\\": 1}}";
-            StringContent content = new StringContent(payload, Encoding.UTF8, "application/json");
-            await client.PatchAsync(patchUrl, content);
-        }
-
-        // 4. Send Heartbeat to keep app marked ONLINE
-        public static async Task SendHeartbeatPingAsync()
-        {
-            string putUrl = $"{FirebaseBaseUrl}/apps/{TargetAppId}.json";
-            long now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-            string payload = $"{{\\"appName\\": \\"${selectedAppName}\\", \\"appId\\": \\"{TargetAppId}\\", \\"version\\": \\"{ClientVersion}\\", \\"lastSeen\\": {now}, \\"status\\": \\"ONLINE\\"}}";
-            StringContent content = new StringContent(payload, Encoding.UTF8, "application/json");
-            await client.PutAsync(putUrl, content);
-        }
+        catch { return "HWID-DEFAULT-01"; }
     }
 }`;
       document.getElementById('snippet-csharp').innerText = csharpCode;
@@ -3417,6 +3524,19 @@ try {
     exit 1
 }`;
       document.getElementById('snippet-batch').innerText = batchCode;
+    }
+
+    
+    function copyKeyAuthSnippet() {
+      const code = document.getElementById('keyauth-call-snippet').innerText;
+      copyToClipboard(code);
+      showToast('คัดลอกโค้ดเรียกใช้งานแบบ KeyAuth สำเร็จ!', 'success');
+    }
+
+    function downloadCyberAuthCs() {
+      const code = document.getElementById('snippet-csharp').innerText;
+      downloadFile(code, 'CyberAuth.cs', 'text/plain');
+      showToast('ดาวน์โหลดไฟล์ CyberAuth.cs สำเร็จ! นำไปใส่ใน Visual Studio ได้เลย', 'success');
     }
 
     function copyCurrentCodeSnippet() {
