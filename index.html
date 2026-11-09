@@ -953,9 +953,9 @@
                 <input type="text" id="wizard-app-id" value="templatev2" placeholder="เช่น templatev2" class="w-full bg-[#16060c] border border-cyber-red/40 rounded px-3 py-2 text-cyber-green font-bold focus:outline-none focus:border-cyber-red shadow-inner">
               </div>
               <div class="flex items-end">
-                <button type="button" onclick="handleWizardRegisterApp()" class="w-full py-2.5 px-4 bg-gradient-to-r from-cyber-red to-[#990024] hover:from-[#ff1a53] hover:to-cyber-red text-white font-orbitron font-bold text-xs uppercase tracking-wider rounded shadow-neon-red transition-all flex items-center justify-center gap-2 cyber-cut-sm">
-                  <i class="fa-solid fa-link"></i>
-                  <span>สร้างโค้ดเชื่อมต่อโปรแกรมนี้</span>
+                <button type="button" id="wizard-generate-btn" onclick="handleWizardRegisterApp()" class="w-full py-2.5 px-4 bg-gradient-to-r from-cyber-red to-[#b3002b] hover:from-[#ff1a53] hover:to-cyber-red active:scale-95 text-white font-orbitron font-bold text-xs uppercase tracking-wider rounded shadow-neon-red transition-all flex items-center justify-center gap-2 cyber-cut-sm cursor-pointer">
+                  <i id="wizard-btn-icon" class="fa-solid fa-bolt"></i>
+                  <span id="wizard-btn-text">สร้างโค้ดเชื่อมต่อโปรแกรมนี้</span>
                 </button>
               </div>
             </div>
@@ -3120,60 +3120,90 @@ git push -u origin main</pre>
       }
     }
 
-    async function handleWizardRegisterApp() {
-      cyberAudio.init();
-      const nameInput = document.getElementById('wizard-app-name');
-      const idInput = document.getElementById('wizard-app-id');
-      
-      const appName = (nameInput.value || '').trim();
-      let appId = (idInput.value || '').trim().toLowerCase();
-      if (!appId) appId = appName.toLowerCase().replace(/[^a-z0-9]/g, '-');
+    function handleWizardRegisterApp() {
+      try {
+        cyberAudio.init();
+        cyberAudio.playBeep(700, 'triangle', 0.05);
 
-      if (!appName || !appId) {
-        showToast('กรุณากรอกชื่อโปรแกรมและรหัสไอดีโปรแกรม', 'error');
-        return;
-      }
+        const btn = document.getElementById('wizard-generate-btn');
+        const btnText = document.getElementById('wizard-btn-text');
+        const btnIcon = document.getElementById('wizard-btn-icon');
+        const nameInput = document.getElementById('wizard-app-name');
+        const idInput = document.getElementById('wizard-app-id');
+        
+        const appName = (nameInput ? nameInput.value : '').trim() || 'Templatev2';
+        let appId = (idInput ? idInput.value : '').trim().toLowerCase() || appName.toLowerCase().replace(/[^a-z0-9]/g, '-');
 
-      // Prepare app data object
-      const appData = {
-        appName: appName,
-        appId: appId,
-        version: "v1.0.0",
-        lastSeen: Date.now(),
-        status: "ONLINE",
-        validationsCount: (appsState[appId]?.validationsCount || 0)
-      };
+        // Immediate visual feedback on button
+        if (btnText) btnText.innerText = "กำลังสร้างโค้ด...";
+        if (btnIcon) btnIcon.className = "fa-solid fa-spinner fa-spin";
 
-      // Save to Firebase or Local simulation
-      if (isFirebaseLive && firebaseDb) {
-        await firebaseDb.ref('apps/' + appId).set(appData);
-        firebaseDb.ref('logs').push({
-          message: `Application [${appName}] (${appId}) registered via App Wizard`,
-          timestamp: Date.now()
-        });
-      } else {
+        // 1. Prepare and commit to local state immediately
+        const appData = {
+          appName: appName,
+          appId: appId,
+          version: "v1.0.0",
+          lastSeen: Date.now(),
+          status: "ONLINE",
+          validationsCount: (appsState[appId]?.validationsCount || 0)
+        };
         appsState[appId] = appData;
-        localStorage.setItem('cyber_mock_apps', JSON.stringify(appsState));
+
+        try {
+          localStorage.setItem('cyber_mock_apps', JSON.stringify(appsState));
+        } catch (e) {}
+
+        // 2. Update all dropdowns & render snippets immediately
+        populateTargetAppDropdowns();
+        renderAppsRegistry();
+        renderDashboardStats();
+
+        const selectEl = document.getElementById('docs-code-app-select');
+        if (selectEl) selectEl.value = appId;
+
+        renderCodeSnippets();
+
+        // 3. Update status badge
+        const badge = document.getElementById('wizard-status-badge');
+        if (badge) {
+          badge.innerHTML = `<span class="text-cyber-green font-bold bg-green-950/60 px-2 py-0.5 rounded border border-green-500/50 flex items-center gap-1.5"><i class="fa-solid fa-circle-check"></i> สร้างโค้ดสำหรับ [${appName}] สำเร็จแล้ว! ดึงข้อมูลลงโค้ดด้านล่างแล้ว &darr;</span>`;
+        }
+
+        // 4. Button success feedback
+        setTimeout(() => {
+          if (btnText) btnText.innerText = "สร้างสำเร็จ!";
+          if (btnIcon) btnIcon.className = "fa-solid fa-circle-check text-green-400";
+          cyberAudio.playAccessGranted();
+          showToast(`สร้างโค้ดสำหรับ [${appName}] สำเร็จ! เลื่อนลงไปก๊อปปี้ได้เลย`, 'success');
+        }, 150);
+
+        setTimeout(() => {
+          if (btnText) btnText.innerText = "สร้างโค้ดเชื่อมต่อโปรแกรมนี้";
+          if (btnIcon) btnIcon.className = "fa-solid fa-bolt";
+        }, 2500);
+
+        // 5. Smooth scroll down to the C# code box so the user sees the result!
+        const codeBox = document.getElementById('code-pane-csharp');
+        if (codeBox) {
+          codeBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+
+        // 6. Background non-blocking sync to Firebase
+        if (isFirebaseLive && firebaseDb) {
+          firebaseDb.ref('apps/' + appId).set(appData).catch(err => {
+            console.warn('Firebase sync warning:', err);
+          });
+          firebaseDb.ref('logs').push({
+            message: `Application [${appName}] (${appId}) registered via App Wizard`,
+            timestamp: Date.now()
+          }).catch(err => {});
+        }
+
+        addTelemetryLog(`App Wizard: Registered [${appName}] (ID: ${appId}).`);
+      } catch (err) {
+        console.error('Wizard error:', err);
+        showToast('เกิดข้อผิดพลาด: ' + err.message, 'error');
       }
-
-      // Update in-memory state & UI
-      appsState[appId] = appData;
-      populateTargetAppDropdowns();
-      renderAppsRegistry();
-      renderDashboardStats();
-
-      // Select this app in dropdown and render snippets
-      const selectEl = document.getElementById('docs-code-app-select');
-      if (selectEl) selectEl.value = appId;
-
-      renderCodeSnippets();
-      cyberAudio.playAccessGranted();
-
-      const badge = document.getElementById('wizard-status-badge');
-      if (badge) badge.innerText = `โปรแกรม [${appName}] บันทึกสำเร็จ! โค้ดด้านล่างอัปเดตอัตโนมัติแล้ว`;
-
-      showToast(`สร้างรหัสโปรแกรม [${appName}] สำเร็จ! ก๊อปปี้โค้ดด้านล่างไปใช้ได้เลย`, 'success');
-      addTelemetryLog(`App Wizard: Registered [${appName}] (ID: ${appId}). Ready for integration.`);
     }
 
     function syncWizardFromSelect(appId) {
