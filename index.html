@@ -3372,7 +3372,7 @@ public static class CyberAuth
             cleanDbUrl = (cleanDbUrl ?? FirebaseUrl).TrimEnd('/');
             string url = $"{cleanDbUrl}/apps/{AppId}.json";
             long now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-            string body = $"{{\"appName\":\"${selectedAppName}\",\"appId\":\"${selectedAppId}\",\"version\":\"${Version}\",\"lastSeen\":{now},\"status\":\"ONLINE\"}}";
+            string body = $"{{\"appName\":\"${selectedAppName}\",\"appId\":\"${selectedAppId}\",\"version\":\"{Version}\",\"lastSeen\":{now},\"status\":\"ONLINE\"}}";
             await http.PutAsync(url, new StringContent(body, Encoding.UTF8, "application/json"));
         } catch { }
     }
