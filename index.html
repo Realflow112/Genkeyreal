@@ -443,10 +443,30 @@
                 </select>
               </div>
 
+              <!-- Quick Key Mode Toggle -->
+              <div>
+                <label class="block text-gray-400 mb-1">// KEY MODE</label>
+                <div class="grid grid-cols-2 gap-2">
+                  <button type="button" id="quick-mode-random" onclick="setQuickKeyMode('random')" class="py-1.5 px-2 rounded border border-cyber-red bg-cyber-red/20 text-white font-bold text-[11px] transition-all">
+                    สุ่มคีย์ (RANDOM)
+                  </button>
+                  <button type="button" id="quick-mode-custom" onclick="setQuickKeyMode('custom')" class="py-1.5 px-2 rounded border border-cyber-red/30 bg-[#16060c] text-gray-400 hover:text-white text-[11px] transition-all">
+                    ใส่คีย์เอง (CUSTOM)
+                  </button>
+                </div>
+              </div>
+
               <div class="grid grid-cols-2 gap-3">
-                <div>
+                <div id="quick-prefix-wrap">
                   <label class="block text-gray-400 mb-1">// PREFIX</label>
                   <input type="text" id="quick-prefix" value="REAL" class="w-full bg-[#16060c] border border-cyber-red/30 rounded px-3 py-2 text-white uppercase focus:outline-none focus:border-cyber-red">
+                </div>
+                <div id="quick-custom-key-wrap" class="hidden">
+                  <label class="block text-cyber-green mb-1">// CUSTOM KEY</label>
+                  <div class="flex gap-1.5">
+                    <input type="text" id="quick-custom-key" placeholder="เช่น Dev, Admin, VIP01" class="w-full min-w-0 bg-[#16060c] border border-cyber-green/40 rounded px-2.5 py-2 text-white focus:outline-none focus:border-cyber-green">
+                    <button type="button" onclick="setQuickCustomKeyPreset('Dev')" class="px-2 py-1 bg-cyber-green/20 border border-cyber-green/40 text-cyber-green hover:bg-cyber-green hover:text-black rounded text-[11px] font-bold shrink-0 transition-all">Dev</button>
+                  </div>
                 </div>
                 <div>
                   <label class="block text-gray-400 mb-1">// DURATION</label>
@@ -538,7 +558,7 @@
               <h2 class="font-orbitron text-xl font-bold text-white flex items-center gap-2">
                 <i class="fa-solid fa-microchip text-cyber-red"></i> CRYPTO KEY FORGE & CUSTOMIZER
               </h2>
-              <p class="font-mono text-xs text-gray-400 mt-1">GENERATE MIL-SPEC SEGMENTED CRYPTOGRAPHIC LICENSE KEYS</p>
+              <p class="font-mono text-xs text-gray-400 mt-1">GENERATE MIL-SPEC SEGMENTED CRYPTOGRAPHIC LICENSE KEYS OR DEFINE CUSTOM KEYS</p>
             </div>
             <div class="font-mono text-xs text-gray-400 flex items-center gap-2">
               <span class="w-2 h-2 rounded-full bg-cyber-green"></span>
@@ -550,7 +570,7 @@
             
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
               
-              <!-- Column 1: Target App & Prefix -->
+              <!-- Column 1: Target App & Key Mode / Prefix / Custom Key -->
               <div class="space-y-4">
                 <div>
                   <label class="block font-mono text-xs text-gray-300 uppercase mb-1.5">
@@ -564,13 +584,41 @@
 
                 <div>
                   <label class="block font-mono text-xs text-gray-300 uppercase mb-1.5">
-                    2. CUSTOM KEY PREFIX (OPTIONAL)
+                    2. KEY MODE & PREFIX / CUSTOM KEY
                   </label>
-                  <div class="flex gap-2">
-                    <input type="text" id="gen-prefix" value="REAL" maxlength="8" placeholder="e.g. REAL, AIM" class="flex-grow bg-[#16060c] border border-cyber-red/40 rounded px-3 py-2 text-white font-mono text-sm uppercase focus:outline-none focus:border-cyber-red">
-                    <button type="button" onclick="setPresetPrefix('REAL')" class="px-2 py-1 bg-cyber-red/20 text-cyber-red text-xs font-mono rounded hover:bg-cyber-red hover:text-white">REAL</button>
-                    <button type="button" onclick="setPresetPrefix('AIM')" class="px-2 py-1 bg-cyber-red/20 text-cyber-red text-xs font-mono rounded hover:bg-cyber-red hover:text-white">AIM</button>
-                    <button type="button" onclick="setPresetPrefix('NL3D')" class="px-2 py-1 bg-cyber-red/20 text-cyber-red text-xs font-mono rounded hover:bg-cyber-red hover:text-white">NL3D</button>
+                  <!-- Mode Toggle -->
+                  <div class="grid grid-cols-2 gap-2 mb-3 font-mono text-xs">
+                    <button type="button" id="gen-mode-random" onclick="setGenKeyMode('random')" class="py-2 px-2 rounded border border-cyber-red bg-cyber-red/20 text-white font-bold transition-all">
+                      AUTO RANDOM (สุ่มคีย์)
+                    </button>
+                    <button type="button" id="gen-mode-custom" onclick="setGenKeyMode('custom')" class="py-2 px-2 rounded border border-cyber-red/30 bg-[#16060c] text-gray-400 hover:text-white transition-all">
+                      CUSTOM KEY (ใส่คีย์เอง)
+                    </button>
+                  </div>
+
+                  <!-- Random Prefix Box -->
+                  <div id="gen-random-prefix-box">
+                    <div class="flex gap-2">
+                      <input type="text" id="gen-prefix" value="REAL" maxlength="8" oninput="updateKeyPreview()" placeholder="e.g. REAL, AIM" class="flex-grow bg-[#16060c] border border-cyber-red/40 rounded px-3 py-2 text-white font-mono text-sm uppercase focus:outline-none focus:border-cyber-red">
+                      <button type="button" onclick="setPresetPrefix('REAL')" class="px-2 py-1 bg-cyber-red/20 text-cyber-red text-xs font-mono rounded hover:bg-cyber-red hover:text-white">REAL</button>
+                      <button type="button" onclick="setPresetPrefix('AIM')" class="px-2 py-1 bg-cyber-red/20 text-cyber-red text-xs font-mono rounded hover:bg-cyber-red hover:text-white">AIM</button>
+                      <button type="button" onclick="setPresetPrefix('NL3D')" class="px-2 py-1 bg-cyber-red/20 text-cyber-red text-xs font-mono rounded hover:bg-cyber-red hover:text-white">NL3D</button>
+                    </div>
+                  </div>
+
+                  <!-- Custom Key Box -->
+                  <div id="gen-custom-key-box" class="hidden space-y-2">
+                    <input type="text" id="gen-custom-key" oninput="updateKeyPreview()" placeholder="พิมพ์คีย์ที่ต้องการ เช่น Dev" class="w-full bg-[#16060c] border border-cyber-green/50 rounded px-3 py-2 text-cyber-green font-mono text-sm focus:outline-none focus:border-cyber-green">
+                    <div class="flex flex-wrap gap-1.5 font-mono text-[11px]">
+                      <button type="button" onclick="setCustomKeyPreset('Dev')" class="px-2 py-1 bg-cyber-green/20 border border-cyber-green/40 text-cyber-green rounded hover:bg-cyber-green hover:text-black transition-all">Dev</button>
+                      <button type="button" onclick="setCustomKeyPreset('DevReal')" class="px-2 py-1 bg-cyber-green/20 border border-cyber-green/40 text-cyber-green rounded hover:bg-cyber-green hover:text-black transition-all">DevReal</button>
+                      <button type="button" onclick="setCustomKeyPreset('VIP')" class="px-2 py-1 bg-cyber-green/20 border border-cyber-green/40 text-cyber-green rounded hover:bg-cyber-green hover:text-black transition-all">VIP</button>
+                      <button type="button" onclick="setCustomKeyPreset('Admin')" class="px-2 py-1 bg-cyber-green/20 border border-cyber-green/40 text-cyber-green rounded hover:bg-cyber-green hover:text-black transition-all">Admin</button>
+                      <button type="button" onclick="setCustomKeyPreset('TEST')" class="px-2 py-1 bg-cyber-green/20 border border-cyber-green/40 text-cyber-green rounded hover:bg-cyber-green hover:text-black transition-all">TEST</button>
+                    </div>
+                    <p class="text-[10px] font-mono text-gray-400 leading-relaxed">
+                      คงตัวพิมพ์เล็ก-ใหญ่ตามที่กรอกเป๊ะๆ (เช่น <code class="text-cyber-green">Dev</code>) หรือคั่นหลายคีย์ด้วยเครื่องหมายจุลภาค <code class="text-cyber-green">,</code> เช่น <code class="text-gray-300">Dev, VIP1</code>
+                    </p>
                   </div>
                 </div>
 
@@ -583,7 +631,7 @@
               </div>
 
               <!-- Column 2: Key Structure & Character Sets -->
-              <div class="space-y-4">
+              <div id="gen-random-structure-col" class="space-y-4 transition-opacity duration-200">
                 <div>
                   <label class="block font-mono text-xs text-gray-300 uppercase mb-1.5">
                     4. KEY FORMAT STRUCTURE
@@ -712,7 +760,7 @@
 
               <!-- Batch Quantity & Trigger -->
               <div class="flex flex-col sm:flex-row items-center gap-4">
-                <div class="w-full sm:w-48">
+                <div id="gen-batch-slider-wrap" class="w-full sm:w-48 transition-opacity duration-200">
                   <div class="flex justify-between font-mono text-xs text-gray-400 mb-1">
                     <span>BATCH QUANTITY</span>
                     <span id="batch-count-display" class="text-cyber-red font-bold">1 KEY</span>
@@ -2056,6 +2104,47 @@ git push -u origin main</pre>
     let selectedKeyForExtend = null;
     let currentCodeLanguage = 'csharp';
     let simulationMode = false;
+    let quickKeyMode = 'random';
+    let genKeyMode = 'random';
+
+    const FIREBASE_FORBIDDEN_KEY_CHARS = /[.#$\[\]\/]/;
+
+    /**
+     * Validate a manually entered license key against empty strings and forbidden RTDB path chars.
+     */
+    function validateCustomKeyString(key) {
+      if (!key) {
+        return 'กรุณากรอกคีย์ที่ต้องการสร้าง (เช่น Dev)';
+      }
+      if (FIREBASE_FORBIDDEN_KEY_CHARS.test(key)) {
+        return `คีย์ "${key}" มีอักขระต้องห้ามของ Firebase (. # $ / [ ])`;
+      }
+      return null;
+    }
+
+    /**
+     * Build a normalized license key record object for storage in Firebase / Local Storage.
+     */
+    function buildKeyRecord({ keyString, targetAppName, targetAppId, lifespanDays, maxUses, hwidLockEnabled, note, createdAt }) {
+      let expiresAt = null;
+      if (lifespanDays !== 'unlimited') {
+        expiresAt = createdAt + (parseInt(lifespanDays, 10) * 86400000);
+      }
+      return {
+        key: keyString,
+        targetApp: targetAppName,
+        targetAppId: targetAppId,
+        status: "ACTIVE",
+        createdAt: createdAt,
+        expiresAt: expiresAt,
+        lifespanDays: lifespanDays,
+        maxUses: maxUses === 'unlimited' ? 'unlimited' : parseInt(maxUses, 10),
+        currentUses: 0,
+        boundHwid: null,
+        hwidLockEnabled: hwidLockEnabled,
+        note: note
+      };
+    }
 
     // --- Initialize Firebase or Fallback Simulation Engine ---
     function initDatabase() {
@@ -2334,6 +2423,82 @@ git push -u origin main</pre>
       updateKeyPreview();
     }
 
+    // --- Key Mode Toggles (Random vs Custom) ---
+    function setQuickKeyMode(mode) {
+      quickKeyMode = mode;
+      cyberAudio.playBeep(700, 'triangle', 0.04);
+
+      const randomBtn = document.getElementById('quick-mode-random');
+      const customBtn = document.getElementById('quick-mode-custom');
+      const prefixWrap = document.getElementById('quick-prefix-wrap');
+      const customWrap = document.getElementById('quick-custom-key-wrap');
+      const customInput = document.getElementById('quick-custom-key');
+
+      if (mode === 'custom') {
+        if (randomBtn) randomBtn.className = "py-1.5 px-2 rounded border border-cyber-red/30 bg-[#16060c] text-gray-400 hover:text-white text-[11px] transition-all";
+        if (customBtn) customBtn.className = "py-1.5 px-2 rounded border border-cyber-green bg-cyber-green/20 text-cyber-green font-bold text-[11px] transition-all";
+        if (prefixWrap) prefixWrap.classList.add('hidden');
+        if (customWrap) customWrap.classList.remove('hidden');
+        if (customInput) customInput.focus();
+      } else {
+        if (randomBtn) randomBtn.className = "py-1.5 px-2 rounded border border-cyber-red bg-cyber-red/20 text-white font-bold text-[11px] transition-all";
+        if (customBtn) customBtn.className = "py-1.5 px-2 rounded border border-cyber-red/30 bg-[#16060c] text-gray-400 hover:text-white text-[11px] transition-all";
+        if (prefixWrap) prefixWrap.classList.remove('hidden');
+        if (customWrap) customWrap.classList.add('hidden');
+      }
+    }
+
+    function setQuickCustomKeyPreset(val) {
+      const input = document.getElementById('quick-custom-key');
+      if (input) {
+        input.value = val;
+        input.focus();
+      }
+      cyberAudio.playBeep(750, 'triangle', 0.04);
+    }
+
+    function setGenKeyMode(mode) {
+      genKeyMode = mode;
+      cyberAudio.playBeep(700, 'triangle', 0.04);
+
+      const randomBtn = document.getElementById('gen-mode-random');
+      const customBtn = document.getElementById('gen-mode-custom');
+      const randomPrefixBox = document.getElementById('gen-random-prefix-box');
+      const customKeyBox = document.getElementById('gen-custom-key-box');
+      const structureCol = document.getElementById('gen-random-structure-col');
+      const batchSliderWrap = document.getElementById('gen-batch-slider-wrap');
+      const customInput = document.getElementById('gen-custom-key');
+
+      if (mode === 'custom') {
+        if (randomBtn) randomBtn.className = "py-2 px-2 rounded border border-cyber-red/30 bg-[#16060c] text-gray-400 hover:text-white transition-all";
+        if (customBtn) customBtn.className = "py-2 px-2 rounded border border-cyber-green bg-cyber-green/20 text-cyber-green font-bold transition-all";
+        if (randomPrefixBox) randomPrefixBox.classList.add('hidden');
+        if (customKeyBox) customKeyBox.classList.remove('hidden');
+        if (structureCol) structureCol.classList.add('opacity-40', 'pointer-events-none');
+        if (batchSliderWrap) batchSliderWrap.classList.add('opacity-40', 'pointer-events-none');
+        if (customInput) customInput.focus();
+      } else {
+        if (randomBtn) randomBtn.className = "py-2 px-2 rounded border border-cyber-red bg-cyber-red/20 text-white font-bold transition-all";
+        if (customBtn) customBtn.className = "py-2 px-2 rounded border border-cyber-red/30 bg-[#16060c] text-gray-400 hover:text-white transition-all";
+        if (randomPrefixBox) randomPrefixBox.classList.remove('hidden');
+        if (customKeyBox) customKeyBox.classList.add('hidden');
+        if (structureCol) structureCol.classList.remove('opacity-40', 'pointer-events-none');
+        if (batchSliderWrap) batchSliderWrap.classList.remove('opacity-40', 'pointer-events-none');
+      }
+
+      updateKeyPreview();
+    }
+
+    function setCustomKeyPreset(val) {
+      const input = document.getElementById('gen-custom-key');
+      if (input) {
+        input.value = val;
+        input.focus();
+      }
+      cyberAudio.playBeep(750, 'triangle', 0.04);
+      updateKeyPreview();
+    }
+
     // --- Key Generator Logic ---
     function updateBatchDisplay(val) {
       document.getElementById('batch-count-display').innerText = val + (val == 1 ? ' KEY' : ' KEYS');
@@ -2392,6 +2557,13 @@ git push -u origin main</pre>
     function updateKeyPreview() {
       const previewEl = document.getElementById('key-preview-text');
       if (!previewEl) return;
+
+      if (genKeyMode === 'custom') {
+        const customVal = (document.getElementById('gen-custom-key')?.value || '').trim();
+        previewEl.innerText = customVal || 'Dev';
+        return;
+      }
+
       const prefix = document.getElementById('gen-prefix').value || "REAL";
       const segmentsCount = parseInt(document.getElementById('gen-segments').value) || 4;
       const segLen = parseInt(document.getElementById('gen-seg-length').value) || 4;
@@ -2430,31 +2602,34 @@ git push -u origin main</pre>
         return;
       }
       const targetAppName = appsState[targetAppId]?.appName || targetAppId;
-      const prefix = (document.getElementById('quick-prefix').value || 'REAL').trim();
       const lifespanVal = document.getElementById('quick-days').value;
-      const note = document.getElementById('quick-note').value || 'Express Key';
+      const note = document.getElementById('quick-note').value || (quickKeyMode === 'custom' ? 'Custom Express Key' : 'Express Key');
 
-      const keyString = generateSingleKeyString(prefix, 4, 4, "-", "ABCDEFGHJKLMNPQRSTUVWXYZ23456789");
-      const now = Date.now();
-      let expiresAt = null;
-      if (lifespanVal !== 'unlimited') {
-        expiresAt = now + (parseInt(lifespanVal) * 86400000);
+      let keyString = '';
+      if (quickKeyMode === 'custom') {
+        keyString = (document.getElementById('quick-custom-key')?.value || '').trim();
+        const errMsg = validateCustomKeyString(keyString);
+        if (errMsg) {
+          cyberAudio.playAccessDenied();
+          showToast(errMsg, 'error');
+          document.getElementById('quick-custom-key')?.focus();
+          return;
+        }
+      } else {
+        const prefix = (document.getElementById('quick-prefix').value || 'REAL').trim();
+        keyString = generateSingleKeyString(prefix, 4, 4, "-", "ABCDEFGHJKLMNPQRSTUVWXYZ23456789");
       }
 
-      const keyObj = {
-        key: keyString,
-        targetApp: targetAppName,
-        targetAppId: targetAppId,
-        status: "ACTIVE",
-        createdAt: now,
-        expiresAt: expiresAt,
+      const keyObj = buildKeyRecord({
+        keyString,
+        targetAppName,
+        targetAppId,
         lifespanDays: lifespanVal,
         maxUses: 1,
-        currentUses: 0,
-        boundHwid: null,
         hwidLockEnabled: true,
-        note: note
-      };
+        note,
+        createdAt: Date.now()
+      });
 
       await commitKeyToStorage(keyObj);
       cyberAudio.playKeyGen();
@@ -2465,7 +2640,7 @@ git push -u origin main</pre>
       addTelemetryLog(`Express Key ${keyString} provisioned for ${targetAppName}.`);
     }
 
-    // Batch Key Generation
+    // Batch Key Generation (supports Random batch and Custom manual key(s))
     async function handleBatchGenerate(event) {
       event.preventDefault();
       cyberAudio.init();
@@ -2477,24 +2652,53 @@ git push -u origin main</pre>
         return;
       }
       const targetAppName = appsState[targetAppId]?.appName || targetAppId;
-      const prefix = (document.getElementById('gen-prefix').value || '').trim();
-      const note = document.getElementById('gen-note').value || 'Batch Forge';
-      const segmentsCount = parseInt(document.getElementById('gen-segments').value) || 4;
-      const segLen = parseInt(document.getElementById('gen-seg-length').value) || 4;
-      const sepRadio = document.querySelector('input[name="gen-separator"]:checked');
-      const separator = sepRadio ? sepRadio.value : "-";
-      const charset = getCharset();
+      const note = document.getElementById('gen-note').value || (genKeyMode === 'custom' ? 'Custom Key' : 'Batch Forge');
 
       // Lifespan calculation
       const lifespanOption = document.getElementById('gen-lifespan').value;
       let days = lifespanOption;
       if (lifespanOption === 'custom') {
-        days = parseInt(document.getElementById('gen-custom-days').value) || 30;
+        days = parseInt(document.getElementById('gen-custom-days').value, 10) || 30;
       }
 
       const maxUsesVal = document.getElementById('gen-max-uses').value;
       const hwidLock = document.getElementById('gen-hwid-lock').checked;
-      const quantity = parseInt(document.getElementById('gen-quantity').value) || 1;
+
+      // Determine list of keys to synthesize
+      let keysToCreate = [];
+      if (genKeyMode === 'custom') {
+        const rawCustom = (document.getElementById('gen-custom-key')?.value || '').trim();
+        if (!rawCustom) {
+          cyberAudio.playAccessDenied();
+          showToast('กรุณากรอกคีย์ที่ต้องการสร้าง (เช่น Dev)', 'error');
+          document.getElementById('gen-custom-key')?.focus();
+          return;
+        }
+        const parsed = rawCustom.split(/[\r\n,]+/).map(item => item.trim()).filter(Boolean);
+        keysToCreate = [...new Set(parsed)];
+        for (const candidate of keysToCreate) {
+          const errMsg = validateCustomKeyString(candidate);
+          if (errMsg) {
+            cyberAudio.playAccessDenied();
+            showToast(errMsg, 'error');
+            document.getElementById('gen-custom-key')?.focus();
+            return;
+          }
+        }
+      } else {
+        const prefix = (document.getElementById('gen-prefix').value || '').trim();
+        const segmentsCount = parseInt(document.getElementById('gen-segments').value, 10) || 4;
+        const segLen = parseInt(document.getElementById('gen-seg-length').value, 10) || 4;
+        const sepRadio = document.querySelector('input[name="gen-separator"]:checked');
+        const separator = sepRadio ? sepRadio.value : "-";
+        const charset = getCharset();
+        const quantity = parseInt(document.getElementById('gen-quantity').value, 10) || 1;
+        for (let i = 0; i < quantity; i++) {
+          keysToCreate.push(generateSingleKeyString(prefix, segmentsCount, segLen, separator, charset));
+        }
+      }
+
+      const totalCount = keysToCreate.length;
 
       // Show Progress UI
       const progressWrapper = document.getElementById('gen-progress-wrapper');
@@ -2508,37 +2712,28 @@ git push -u origin main</pre>
       const generatedKeyList = [];
       const now = Date.now();
 
-      for (let i = 1; i <= quantity; i++) {
-        const keyString = generateSingleKeyString(prefix, segmentsCount, segLen, separator, charset);
-        
-        let expiresAt = null;
-        if (days !== 'unlimited') {
-          expiresAt = now + (parseInt(days) * 86400000);
-        }
-
-        const keyObj = {
-          key: keyString,
-          targetApp: targetAppName,
-          targetAppId: targetAppId,
-          status: "ACTIVE",
-          createdAt: now,
-          expiresAt: expiresAt,
+      for (let i = 0; i < totalCount; i++) {
+        const keyString = keysToCreate[i];
+        const keyObj = buildKeyRecord({
+          keyString,
+          targetAppName,
+          targetAppId,
           lifespanDays: days,
-          maxUses: maxUsesVal === 'unlimited' ? 'unlimited' : parseInt(maxUsesVal),
-          currentUses: 0,
-          boundHwid: null,
+          maxUses: maxUsesVal,
           hwidLockEnabled: hwidLock,
-          note: note
-        };
+          note,
+          createdAt: now
+        });
 
         await commitKeyToStorage(keyObj);
         generatedKeyList.push(keyString);
 
         // Progress update
-        const percent = Math.round((i / quantity) * 100);
+        const step = i + 1;
+        const percent = Math.round((step / totalCount) * 100);
         progressBar.style.width = percent + '%';
-        progressText.innerText = `${percent}% (${i}/${quantity})`;
-        cyberAudio.playBeep(600 + i * 15, 'sine', 0.02);
+        progressText.innerText = `${percent}% (${step}/${totalCount})`;
+        cyberAudio.playBeep(600 + step * 15, 'sine', 0.02);
       }
 
       setTimeout(() => {
@@ -2552,11 +2747,11 @@ git push -u origin main</pre>
         const resultsTextarea = document.getElementById('batch-keys-textarea');
 
         resultsContainer.classList.remove('hidden');
-        resultsTitle.innerText = `${quantity} LICENSE ${quantity === 1 ? 'KEY' : 'KEYS'} FORGED & COMMITTED TO DATABASE`;
+        resultsTitle.innerText = `${totalCount} LICENSE ${totalCount === 1 ? 'KEY' : 'KEYS'} FORGED & COMMITTED TO DATABASE`;
         resultsTextarea.value = generatedKeyList.join('\n');
 
-        showToast(`Synthesized ${quantity} Keys successfully!`, 'success');
-        addTelemetryLog(`Batch generated ${quantity} keys for application ${targetAppName}.`);
+        showToast(`Synthesized ${totalCount} ${totalCount === 1 ? 'Key' : 'Keys'} successfully!`, 'success');
+        addTelemetryLog(`${genKeyMode === 'custom' ? 'Custom' : 'Batch'} generated ${totalCount} ${totalCount === 1 ? 'key' : 'keys'} for application ${targetAppName}.`);
       }, 300);
     }
 
@@ -2571,6 +2766,10 @@ git push -u origin main</pre>
     }
 
     // --- Master Table: Key Vault Management ---
+    function escapeJsSingleQuote(str) {
+      return String(str || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+    }
+
     function renderKeysTable() {
       const tbody = document.getElementById('keys-table-body');
       if (!tbody) return;
@@ -2631,6 +2830,7 @@ git push -u origin main</pre>
         }
 
         visibleCount++;
+        const safeKeyArg = escapeJsSingleQuote(k.key);
 
         // Status Badge Style
         let statusBadge = '';
@@ -2662,7 +2862,7 @@ git push -u origin main</pre>
             hwidDisplay = `
               <div class="flex items-center gap-1.5">
                 <span class="text-cyan-400 text-[11px] truncate max-w-[120px]" title="${k.boundHwid}">${k.boundHwid}</span>
-                <button onclick="resetKeyHwid('${k.key}')" title="Reset Hardware ID Lock" class="text-gray-400 hover:text-cyber-red">
+                <button onclick="resetKeyHwid('${safeKeyArg}')" title="Reset Hardware ID Lock" class="text-gray-400 hover:text-cyber-red">
                   <i class="fa-solid fa-arrows-rotate text-[10px]"></i>
                 </button>
               </div>
@@ -2679,7 +2879,7 @@ git push -u origin main</pre>
             <td class="py-3 px-4 font-bold tracking-wider text-white">
               <div class="flex items-center gap-2">
                 <span class="font-mono text-sm">${k.key}</span>
-                <button onclick="copyToClipboard('${k.key}')" title="Copy Key" class="text-gray-500 hover:text-cyber-red transition-colors">
+                <button onclick="copyToClipboard('${safeKeyArg}')" title="Copy Key" class="text-gray-500 hover:text-cyber-red transition-colors">
                   <i class="fa-solid fa-copy text-xs"></i>
                 </button>
               </div>
@@ -2697,15 +2897,15 @@ git push -u origin main</pre>
             <td class="py-3 px-4 text-right">
               <div class="flex items-center justify-end gap-1.5 font-mono">
                 <!-- Revoke / Reactivate -->
-                <button onclick="toggleKeyRevocation('${k.key}')" title="${effectiveStatus === 'REVOKED' ? 'Reactivate Key' : 'Revoke Key'}" class="p-1.5 rounded hover:bg-cyber-red/20 text-gray-400 hover:text-cyber-red transition-all">
+                <button onclick="toggleKeyRevocation('${safeKeyArg}')" title="${effectiveStatus === 'REVOKED' ? 'Reactivate Key' : 'Revoke Key'}" class="p-1.5 rounded hover:bg-cyber-red/20 text-gray-400 hover:text-cyber-red transition-all">
                   <i class="fa-solid ${effectiveStatus === 'REVOKED' ? 'fa-rotate-left text-cyber-green' : 'fa-ban text-cyber-red'}"></i>
                 </button>
                 <!-- Extend Lifespan -->
-                <button onclick="openExtendModal('${k.key}')" title="Extend Lifespan" class="p-1.5 rounded hover:bg-cyber-red/20 text-gray-400 hover:text-cyber-amber transition-all">
+                <button onclick="openExtendModal('${safeKeyArg}')" title="Extend Lifespan" class="p-1.5 rounded hover:bg-cyber-red/20 text-gray-400 hover:text-cyber-amber transition-all">
                   <i class="fa-solid fa-clock-rotate-left"></i>
                 </button>
                 <!-- Delete -->
-                <button onclick="deleteKey('${k.key}')" title="Delete Key permanently" class="p-1.5 rounded hover:bg-cyber-red/20 text-gray-400 hover:text-cyber-red transition-all">
+                <button onclick="deleteKey('${safeKeyArg}')" title="Delete Key permanently" class="p-1.5 rounded hover:bg-cyber-red/20 text-gray-400 hover:text-cyber-red transition-all">
                   <i class="fa-regular fa-trash-can"></i>
                 </button>
               </div>
