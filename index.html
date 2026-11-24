@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CYBER_KEY // Cyberpunk License Key Manager & REST API</title>
+  <title>MAHORA // KEY VAULT — License Key Manager & REST API</title>
   
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -66,12 +66,13 @@
     }
     
     body {
-      background-color: #060609;
+      background-color: #06070b;
       background-image: 
-        radial-gradient(circle at 50% 10%, rgba(255, 0, 60, 0.12) 0%, transparent 45%),
-        linear-gradient(rgba(255, 0, 60, 0.03) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255, 0, 60, 0.03) 1px, transparent 1px);
-      background-size: 100% 100%, 36px 36px, 36px 36px;
+        radial-gradient(circle at 20% 0%, rgba(99, 102, 241, 0.14) 0%, transparent 45%),
+        radial-gradient(circle at 80% 10%, rgba(255, 0, 60, 0.12) 0%, transparent 45%),
+        linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
+      background-size: 100% 100%, 100% 100%, 40px 40px, 40px 40px;
       color: #e5e5eb;
       font-family: 'Rajdhani', sans-serif;
     }
@@ -443,6 +444,16 @@
                 </select>
               </div>
 
+              <!-- Quick Key Tier Selector -->
+              <div>
+                <label class="block text-gray-400 mb-1">// KEY TIER (ระดับคีย์)</label>
+                <div class="grid grid-cols-3 gap-1.5">
+                  <button type="button" id="quick-tier-normal" onclick="setQuickTier('NORMAL')" class="py-1.5 px-1.5 rounded border border-blue-500/30 bg-[#16060c] text-gray-400 hover:text-white text-[10px] font-bold transition-all">NORMAL</button>
+                  <button type="button" id="quick-tier-premium" onclick="setQuickTier('PREMIUM')" class="py-1.5 px-1.5 rounded border border-purple-500/30 bg-[#16060c] text-gray-400 hover:text-white text-[10px] font-bold transition-all">PREMIUM</button>
+                  <button type="button" id="quick-tier-all" onclick="setQuickTier('ALL_IN_ONE')" class="py-1.5 px-1.5 rounded border border-cyber-green bg-cyber-green/20 text-cyber-green text-[10px] font-bold transition-all">ALL-IN-ONE</button>
+                </div>
+              </div>
+
               <!-- Quick Key Mode Toggle -->
               <div>
                 <label class="block text-gray-400 mb-1">// KEY MODE</label>
@@ -484,6 +495,13 @@
                 <label class="block text-gray-400 mb-1">// CUSTOMER / MEMO</label>
                 <input type="text" id="quick-note" placeholder="e.g. VIP User Discord #441" class="w-full bg-[#16060c] border border-cyber-red/30 rounded px-3 py-2 text-white focus:outline-none focus:border-cyber-red">
               </div>
+
+              <label class="flex items-center justify-between p-2 rounded bg-black/50 border border-indigo-500/30 cursor-pointer">
+                <span class="text-[11px] text-indigo-300 flex items-center gap-1.5">
+                  <i class="fa-solid fa-hourglass-half"></i> ยังไม่ลดเวลาจนกว่าจะใช้งานครั้งแรก
+                </span>
+                <input type="checkbox" id="quick-start-on-use" checked class="accent-indigo-500 w-4 h-4 cursor-pointer">
+              </label>
 
               <button onclick="handleQuickGenerate()" class="w-full mt-2 py-3 bg-cyber-red hover:bg-[#ff1a53] text-white font-orbitron font-bold text-xs uppercase tracking-wider rounded shadow-neon-red flex items-center justify-center gap-2 transition-all cyber-cut-sm">
                 <i class="fa-solid fa-wand-magic-sparkles"></i>
@@ -743,6 +761,36 @@
                     When enabled, the key permanently binds to the first machine's hardware ID that activates it.
                   </p>
                 </div>
+
+                <div class="p-3 rounded bg-black/50 border border-indigo-500/30 space-y-2">
+                  <div class="flex items-center justify-between">
+                    <label for="gen-start-on-use" class="font-mono text-xs text-indigo-300 uppercase flex items-center gap-1.5 cursor-pointer">
+                      <i class="fa-solid fa-hourglass-half"></i>
+                      <span>START TIMER ON 1ST USE</span>
+                    </label>
+                    <input type="checkbox" id="gen-start-on-use" checked class="accent-indigo-500 w-4 h-4 cursor-pointer">
+                  </div>
+                  <p class="text-[10px] font-mono text-gray-400">
+                    เวลายังไม่ลดลงจนกว่าจะมีผู้ล็อกอินใช้งานคีย์ครั้งแรก
+                  </p>
+                </div>
+
+                <div>
+                  <label class="block font-mono text-xs text-gray-300 uppercase mb-1.5">
+                    8. KEY TIER (ระดับสิทธิ์คีย์)
+                  </label>
+                  <div class="grid grid-cols-3 gap-2 font-mono text-[11px]">
+                    <button type="button" id="gen-tier-normal" onclick="setGenTier('NORMAL')" class="py-2 px-2 rounded border border-blue-500/30 bg-[#16060c] text-gray-400 hover:text-white font-bold transition-all">
+                      NORMAL
+                    </button>
+                    <button type="button" id="gen-tier-premium" onclick="setGenTier('PREMIUM')" class="py-2 px-2 rounded border border-purple-500/30 bg-[#16060c] text-gray-400 hover:text-white font-bold transition-all">
+                      PREMIUM
+                    </button>
+                    <button type="button" id="gen-tier-all" onclick="setGenTier('ALL_IN_ONE')" class="py-2 px-2 rounded border border-cyber-green bg-cyber-green/20 text-cyber-green font-bold transition-all">
+                      ALL-IN-ONE
+                    </button>
+                  </div>
+                </div>
               </div>
 
             </div>
@@ -826,8 +874,11 @@
               <p class="font-mono text-xs text-gray-400">REALTIME QUERY &amp; LIFECYCLE MANAGEMENT</p>
             </div>
 
-            <!-- Export Buttons -->
-            <div class="flex items-center gap-2">
+            <!-- Export & Maintenance Buttons -->
+            <div class="flex flex-wrap items-center gap-2">
+              <button onclick="purgeExpiredKeys()" class="px-3 py-1.5 rounded bg-yellow-950/60 border border-yellow-500/40 text-yellow-300 hover:bg-yellow-500 hover:text-black font-mono text-xs flex items-center gap-1.5 transition-all">
+                <i class="fa-solid fa-broom"></i> PURGE EXPIRED
+              </button>
               <button onclick="exportKeys('txt')" class="px-3 py-1.5 rounded bg-[#16060c] border border-cyber-red/40 text-gray-300 hover:text-white hover:border-cyber-red font-mono text-xs flex items-center gap-1.5 transition-all">
                 <i class="fa-solid fa-file-lines text-cyber-red"></i> EXPORT .TXT
               </button>
@@ -841,7 +892,7 @@
           </div>
 
           <!-- Search & Filter Controls -->
-          <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 pt-3 border-t border-cyber-red/20 font-mono text-xs">
+          <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-3 pt-3 border-t border-cyber-red/20 font-mono text-xs">
             
             <!-- Search Query -->
             <div class="relative sm:col-span-2">
@@ -865,11 +916,22 @@
               </select>
             </div>
 
+            <!-- Filter By Tier -->
+            <div>
+              <select id="vault-filter-tier" onchange="filterKeysTable()" class="w-full bg-[#16060c] border border-cyber-red/30 rounded px-3 py-2 text-white focus:outline-none focus:border-cyber-red text-xs">
+                <option value="ALL">ALL TIERS</option>
+                <option value="NORMAL">NORMAL</option>
+                <option value="PREMIUM">PREMIUM</option>
+                <option value="ALL_IN_ONE">ALL-IN-ONE</option>
+              </select>
+            </div>
+
             <!-- Filter By Status -->
             <div>
               <select id="vault-filter-status" onchange="filterKeysTable()" class="w-full bg-[#16060c] border border-cyber-red/30 rounded px-3 py-2 text-white focus:outline-none focus:border-cyber-red text-xs">
                 <option value="ALL">ALL STATUSES</option>
                 <option value="ACTIVE">ACTIVE ONLY</option>
+                <option value="UNUSED">UNUSED (รอใช้งาน)</option>
                 <option value="EXPIRED">EXPIRED ONLY</option>
                 <option value="REVOKED">REVOKED ONLY</option>
               </select>
@@ -885,6 +947,7 @@
               <thead class="bg-[#18060d] text-gray-400 uppercase text-[11px] border-b border-cyber-red/30 tracking-wider">
                 <tr>
                   <th class="py-3 px-4">LICENSE KEY</th>
+                  <th class="py-3 px-4">TIER</th>
                   <th class="py-3 px-4">APP TARGET</th>
                   <th class="py-3 px-4">STATUS</th>
                   <th class="py-3 px-4">USES</th>
@@ -2125,18 +2188,27 @@ git push -u origin main</pre>
     /**
      * Build a normalized license key record object for storage in Firebase / Local Storage.
      */
-    function buildKeyRecord({ keyString, targetAppName, targetAppId, lifespanDays, maxUses, hwidLockEnabled, note, createdAt }) {
+    function buildKeyRecord({ keyString, targetAppName, targetAppId, lifespanDays, maxUses, hwidLockEnabled, note, createdAt, tier = 'ALL_IN_ONE', startOnFirstUse = true }) {
       let expiresAt = null;
+      let durationMs = null;
       if (lifespanDays !== 'unlimited') {
-        expiresAt = createdAt + (parseInt(lifespanDays, 10) * 86400000);
+        const d = parseInt(lifespanDays, 10) || 30;
+        durationMs = d * 86400000;
+        if (!startOnFirstUse) {
+          expiresAt = createdAt + durationMs;
+        }
       }
       return {
         key: keyString,
+        tier: tier,
         targetApp: targetAppName,
         targetAppId: targetAppId,
         status: "ACTIVE",
         createdAt: createdAt,
+        activatedAt: null,
         expiresAt: expiresAt,
+        durationMs: durationMs,
+        startOnFirstUse: Boolean(startOnFirstUse && lifespanDays !== 'unlimited'),
         lifespanDays: lifespanDays,
         maxUses: maxUses === 'unlimited' ? 'unlimited' : parseInt(maxUses, 10),
         currentUses: 0,
@@ -2592,6 +2664,55 @@ git push -u origin main</pre>
       }
     }
 
+    let quickTier = 'ALL_IN_ONE';
+    let genTier = 'ALL_IN_ONE';
+
+    function setQuickTier(t) {
+      quickTier = t;
+      const map = { NORMAL: 'quick-tier-normal', PREMIUM: 'quick-tier-premium', ALL_IN_ONE: 'quick-tier-all' };
+      Object.entries(map).forEach(([k, id]) => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        const active = (k === t);
+        if (k === 'NORMAL') {
+          el.className = active
+            ? 'py-1.5 px-1.5 rounded border border-blue-400 bg-blue-500/20 text-blue-300 text-[10px] font-bold transition-all'
+            : 'py-1.5 px-1.5 rounded border border-blue-500/30 bg-[#16060c] text-gray-400 hover:text-white text-[10px] font-bold transition-all';
+        } else if (k === 'PREMIUM') {
+          el.className = active
+            ? 'py-1.5 px-1.5 rounded border border-purple-400 bg-purple-500/20 text-purple-300 text-[10px] font-bold transition-all'
+            : 'py-1.5 px-1.5 rounded border border-purple-500/30 bg-[#16060c] text-gray-400 hover:text-white text-[10px] font-bold transition-all';
+        } else {
+          el.className = active
+            ? 'py-1.5 px-1.5 rounded border border-cyber-green bg-cyber-green/20 text-cyber-green text-[10px] font-bold transition-all'
+            : 'py-1.5 px-1.5 rounded border border-cyber-green/30 bg-[#16060c] text-gray-400 hover:text-white text-[10px] font-bold transition-all';
+        }
+      });
+    }
+
+    function setGenTier(t) {
+      genTier = t;
+      const map = { NORMAL: 'gen-tier-normal', PREMIUM: 'gen-tier-premium', ALL_IN_ONE: 'gen-tier-all' };
+      Object.entries(map).forEach(([k, id]) => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        const active = (k === t);
+        if (k === 'NORMAL') {
+          el.className = active
+            ? 'py-2 px-2 rounded border border-blue-400 bg-blue-500/20 text-blue-300 font-bold transition-all'
+            : 'py-2 px-2 rounded border border-blue-500/30 bg-[#16060c] text-gray-400 hover:text-white font-bold transition-all';
+        } else if (k === 'PREMIUM') {
+          el.className = active
+            ? 'py-2 px-2 rounded border border-purple-400 bg-purple-500/20 text-purple-300 font-bold transition-all'
+            : 'py-2 px-2 rounded border border-purple-500/30 bg-[#16060c] text-gray-400 hover:text-white font-bold transition-all';
+        } else {
+          el.className = active
+            ? 'py-2 px-2 rounded border border-cyber-green bg-cyber-green/20 text-cyber-green font-bold transition-all'
+            : 'py-2 px-2 rounded border border-cyber-green/30 bg-[#16060c] text-gray-400 hover:text-white font-bold transition-all';
+        }
+      });
+    }
+
     // Quick Generate
     async function handleQuickGenerate() {
       cyberAudio.init();
@@ -2603,6 +2724,7 @@ git push -u origin main</pre>
       }
       const targetAppName = appsState[targetAppId]?.appName || targetAppId;
       const lifespanVal = document.getElementById('quick-days').value;
+      const startOnFirstUse = document.getElementById('quick-start-on-use')?.checked ?? true;
       const note = document.getElementById('quick-note').value || (quickKeyMode === 'custom' ? 'Custom Express Key' : 'Express Key');
 
       let keyString = '';
@@ -2628,7 +2750,9 @@ git push -u origin main</pre>
         maxUses: 1,
         hwidLockEnabled: true,
         note,
-        createdAt: Date.now()
+        createdAt: Date.now(),
+        tier: quickTier,
+        startOnFirstUse
       });
 
       await commitKeyToStorage(keyObj);
@@ -2663,6 +2787,7 @@ git push -u origin main</pre>
 
       const maxUsesVal = document.getElementById('gen-max-uses').value;
       const hwidLock = document.getElementById('gen-hwid-lock').checked;
+      const startOnFirstUse = document.getElementById('gen-start-on-use')?.checked ?? true;
 
       // Determine list of keys to synthesize
       let keysToCreate = [];
@@ -2722,7 +2847,9 @@ git push -u origin main</pre>
           maxUses: maxUsesVal,
           hwidLockEnabled: hwidLock,
           note,
-          createdAt: now
+          createdAt: now,
+          tier: genTier,
+          startOnFirstUse
         });
 
         await commitKeyToStorage(keyObj);
@@ -2796,6 +2923,7 @@ git push -u origin main</pre>
       keysArray.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
 
       const filterApp = document.getElementById('vault-filter-app')?.value || 'ALL';
+      const filterTier = document.getElementById('vault-filter-tier')?.value || 'ALL';
       const filterStatus = document.getElementById('vault-filter-status')?.value || 'ALL';
       const searchQuery = (document.getElementById('vault-search-input')?.value || '').trim().toLowerCase();
 
@@ -2805,6 +2933,9 @@ git push -u origin main</pre>
       const now = Date.now();
 
       keysArray.forEach(k => {
+        const keyTier = k.tier || 'ALL_IN_ONE';
+        const isUnusedDeferred = (!k.expiresAt && k.startOnFirstUse && k.lifespanDays && k.lifespanDays !== 'unlimited');
+
         // Expiration check
         let isExpired = false;
         if (k.expiresAt && now > k.expiresAt) {
@@ -2815,10 +2946,13 @@ git push -u origin main</pre>
         let effectiveStatus = k.status || 'ACTIVE';
         if (effectiveStatus !== 'REVOKED' && isExpired) {
           effectiveStatus = 'EXPIRED';
+        } else if (effectiveStatus === 'ACTIVE' && isUnusedDeferred) {
+          effectiveStatus = 'UNUSED';
         }
 
         // Filtering
         if (filterApp !== 'ALL' && k.targetAppId !== filterApp) return;
+        if (filterTier !== 'ALL' && keyTier !== filterTier) return;
         if (filterStatus !== 'ALL' && effectiveStatus !== filterStatus) return;
         
         if (searchQuery) {
@@ -2832,10 +2966,20 @@ git push -u origin main</pre>
         visibleCount++;
         const safeKeyArg = escapeJsSingleQuote(k.key);
 
+        // Tier Badge
+        let tierBadge = '<span class="px-2 py-0.5 rounded bg-green-950/60 border border-cyber-green/40 text-cyber-green text-[10px] font-bold">ALL-IN-ONE</span>';
+        if (keyTier === 'NORMAL') {
+          tierBadge = '<span class="px-2 py-0.5 rounded bg-blue-950/60 border border-blue-400/40 text-blue-300 text-[10px] font-bold">NORMAL</span>';
+        } else if (keyTier === 'PREMIUM') {
+          tierBadge = '<span class="px-2 py-0.5 rounded bg-purple-950/60 border border-purple-400/40 text-purple-300 text-[10px] font-bold">PREMIUM</span>';
+        }
+
         // Status Badge Style
         let statusBadge = '';
         if (effectiveStatus === 'ACTIVE') {
           statusBadge = '<span class="px-2 py-0.5 rounded-full bg-green-950/60 border border-green-500/50 text-cyber-green text-[10px] font-bold">ACTIVE</span>';
+        } else if (effectiveStatus === 'UNUSED') {
+          statusBadge = '<span class="px-2 py-0.5 rounded-full bg-indigo-950/70 border border-indigo-400/50 text-indigo-300 text-[10px] font-bold">UNUSED (รอใช้)</span>';
         } else if (effectiveStatus === 'EXPIRED') {
           statusBadge = '<span class="px-2 py-0.5 rounded-full bg-yellow-950/60 border border-yellow-500/50 text-yellow-400 text-[10px] font-bold">EXPIRED</span>';
         } else {
@@ -2844,7 +2988,9 @@ git push -u origin main</pre>
 
         // Format Expiry
         let expiryDisplay = 'UNLIMITED';
-        if (k.expiresAt) {
+        if (isUnusedDeferred) {
+          expiryDisplay = `<span class="text-indigo-300 font-bold"><i class="fa-solid fa-pause mr-1"></i>${k.lifespanDays}d</span> <span class="text-[10px] text-gray-500">(ยังไม่ลดเวลา)</span>`;
+        } else if (k.expiresAt) {
           const diffMs = k.expiresAt - now;
           if (diffMs > 0) {
             const daysLeft = Math.floor(diffMs / 86400000);
@@ -2884,10 +3030,12 @@ git push -u origin main</pre>
                 </button>
               </div>
             </td>
+            <td class="py-3 px-4">${tierBadge}</td>
             <td class="py-3 px-4 text-gray-300">
               <span class="px-2 py-0.5 rounded bg-black/60 border border-cyber-red/20 text-xs">${k.targetApp}</span>
             </td>
             <td class="py-3 px-4">${statusBadge}</td>
+            <td class="py-3 px-4">${tierBadge}</td>
             <td class="py-3 px-4 text-gray-300">
               ${k.currentUses || 0} / <span class="text-gray-500">${k.maxUses === 'unlimited' ? '&infin;' : k.maxUses}</span>
             </td>
@@ -3041,6 +3189,30 @@ git push -u origin main</pre>
       closeExtendModal();
       showToast(`Key extended successfully!`, 'success');
       addTelemetryLog(`Extended lifespan of key ${key} by ${days} days.`);
+    }
+
+    async function purgeExpiredKeys() {
+      const now = Date.now();
+      const expiredKeys = Object.values(keysState).filter(k => k.expiresAt && now > k.expiresAt).map(k => k.key);
+      if (expiredKeys.length === 0) {
+        showToast('ไม่มีคีย์หมดอายุในระบบ', 'warning');
+        return;
+      }
+      if (!confirm(`ลบคีย์ที่หมดอายุแล้วทั้งหมด ${expiredKeys.length} คีย์?`)) return;
+      for (const key of expiredKeys) {
+        if (isFirebaseLive && firebaseDb) {
+          await firebaseDb.ref('keys/' + key).remove();
+        } else {
+          delete keysState[key];
+        }
+      }
+      if (!isFirebaseLive) {
+        localStorage.setItem('cyber_mock_keys', JSON.stringify(keysState));
+        renderKeysTable();
+        renderDashboardStats();
+      }
+      showToast(`ล้างคีย์หมดอายุแล้ว ${expiredKeys.length} คีย์`, 'success');
+      addTelemetryLog(`Purged ${expiredKeys.length} expired key(s).`);
     }
 
     // Export Keys (TXT / JSON)
